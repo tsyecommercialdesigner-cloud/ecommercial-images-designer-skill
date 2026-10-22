@@ -21,3 +21,11 @@ PR检查和评审必须对应待合入的准确head SHA；PR可能测试合并�
 ## 本地准备验证：2026-10-22
 
 使用仓库外新环境，uv 0.12.9、CPython 3.12.14、锁定PyYAML 6.0.3，执行 `scripts/check.ps1`：结构／42场景格式检查通过，36项测试通过、0跳过。工作流另做YAML结构及PowerShell语法检查；没有执行GitHub托管Windows 2025、Actions安装步骤、远端评审或合并流程，因此不能称远端Windows CI通过。
+
+## 2026-10-23交付启动与门禁
+
+已创建dev→main [PR #1](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/pull/1)。原提交保留，采用merge commit；首次解析失败39874716028及Windows路径测试失败39874833845均保留在Actions和CHANGELOG中，没有将本地通过改写为远端通过。
+
+main已启用分支保护：必须通过PR、与最新main一致、必需的GitHub Actions `Windows CI`（app 15368）及准确head SHA上的 `Agent review` 状态，管理员同样受约束；禁强推、禁删除、要求解决讨论。Agent review由本次Agent完成真实代码与证据审查后发布，并链接对应的PR审查记录；新增提交没有该状态就不能沿用旧审查。它是维护者Agent审查，不是另一位GitHub用户的批准，required_approving_review_count=0；未宣称已获得独立人工评审。没有使用admin bypass。
+
+补充忽略规则已在独立临时Git仓库验证7项排除、8项保留及实际暂存清单；本地检查现为37项测试通过、0跳过。新的路径回归只验证离线替身，不改写原285次模型行为记录。后续准确SHA的远端结果另行追加，未完成前不称交付成功。

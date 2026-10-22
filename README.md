@@ -29,7 +29,7 @@ $ecommerce-image-designer
 | `docs/USAGE.md`、`docs/VALIDATION.md` | 发现／使用说明、验证命令和覆盖边界。 |
 | `CONVENTIONS.md`、`AGENTS.md`、`docs/ENGINEERING-GUIDE.md` | 项目工程约定。 |
 
-安装、配置和升级见 [使用说明](docs/USAGE.md)。开发检查见 [验证说明](docs/VALIDATION.md)。已提供 [Windows CI配置及交付约定](docs/DELIVERY.md)，目前尚未在远端运行或核实评审门禁，也未发布标签；不作发布版或跨宿主兼容承诺。版本修复和入口摘要变化见 [CHANGELOG.md](CHANGELOG.md)。
+安装、配置和升级见 [使用说明](docs/USAGE.md)。开发检查见 [验证说明](docs/VALIDATION.md)。已提供 [Windows CI配置及交付约定](docs/DELIVERY.md)，远端执行与门禁状态见该交付记录；尚未发布标签，不作发布版或跨宿主兼容承诺。版本修复和入口摘要变化见 [CHANGELOG.md](CHANGELOG.md)。
 
 完整需求覆盖与本轮修复见 [Skill 审查记录](docs/SKILL-REVIEW.md)，包括两个 MCP 的实际入口限制、方案批准粒度和反馈回退证据。
 

@@ -40,6 +40,13 @@ class MockProtocolTests(unittest.TestCase):
         for source in ['C:/private/key.png','https://example.com/image.png']:
             with self.assertRaises(ValueError):self.nano.media(source)
 
+    def test_equivalent_fixture_paths_preserve_whitelist(self):
+        canonical=self.nano.media('P01')
+        equivalent=str(self.root/'..'/self.root.name/'P01.png')
+        self.assertEqual(self.nano.media(equivalent)['sha256'],canonical['sha256'])
+        self.assertEqual(self.nano.media(str((self.root/'P01.png').resolve()))['path'],canonical['path'])
+        with self.assertRaises(ValueError):self.nano.media(str(self.root/'..'/'private.png'))
+
     def test_plain_plan_rebuilds_panels(self):
         brief=self.nano.design['brief']
         new=self.nano.call('plan_ecommerce_design',{'design_id':'fixture-design','brief':brief,'expected_revision':3,'edits':[dict(panel_id='p01',headline='changed')]})
@@ -50,7 +57,7 @@ class MockProtocolTests(unittest.TestCase):
         result=gpt.call('submit_image_edit',{'prompt':'fixture edit','model':'gpt-image-2.5-sunburst','images':[str(self.root/'P01.png')],'idempotency_key':'only-mock'})
         self.assertTrue(result['simulated'])
         self.assertEqual(result['cost'],0)
-        self.assertTrue(Path(result['files'][0]['path']).is_relative_to(self.root))
+        self.assertTrue(Path(result['files'][0]['path']).is_relative_to(self.root.resolve()))
 
     def test_async_stream_is_rejected(self):
         gpt=mock.MockServer('gpt',self.root,self.skill)

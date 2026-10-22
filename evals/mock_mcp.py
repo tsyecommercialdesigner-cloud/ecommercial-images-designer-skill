@@ -171,7 +171,9 @@ class MockServer:
     def media(self, source):
         known={str(p.resolve()):p for p in self.root.glob('*.png')}
         aliases={p.stem:str(p.resolve()) for p in known.values()}
-        key=aliases.get(source,source)
+        # Windows TEMP can use an 8.3 name while resolve() expands it. Compare
+        # canonical paths on both sides, still restricted to the fixture allowlist.
+        key=aliases[source] if source in aliases else str(Path(source).resolve())
         if key not in known: raise ValueError('Unknown/inaccessible fixture image; no external file/network access')
         p=known[key];b=p.read_bytes()
         return dict(path=str(p),source=source,sha256=hashlib.sha256(b).hexdigest(),width=256,height=256,bytes=len(b),mime_type='image/png')

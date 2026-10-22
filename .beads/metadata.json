@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "ecommercial_images_designer_skill",
+  "project_id": "98ae021d-9ddc-4256-83b5-1b23e9833150"
+}

@@ -18,9 +18,12 @@ jobs:
     env:
       PYTHONUTF8: "1"
       PYTHONDONTWRITEBYTECODE: "1"
-      UV_PROJECT_ENVIRONMENT: ${{ runner.temp }}/ecommerce-ci-venv
-      UV_CACHE_DIR: ${{ runner.temp }}/ecommerce-ci-cache
     steps:
+      - name: Configure isolated dependency paths
+        shell: pwsh
+        run: |
+          "UV_PROJECT_ENVIRONMENT=$env:RUNNER_TEMP/ecommerce-ci-venv" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8
+          "UV_CACHE_DIR=$env:RUNNER_TEMP/ecommerce-ci-cache" | Add-Content -LiteralPath $env:GITHUB_ENV -Encoding utf8
       - name: Check out tested revision
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:

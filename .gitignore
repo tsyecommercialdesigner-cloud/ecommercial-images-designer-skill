@@ -4,3 +4,37 @@
 *.db
 .beads-credential-key
 .beads/proxieddb/
+
+# Dependencies, Python cache and build products
+.venv/
+venv/
+node_modules/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+.coverage
+htmlcov/
+
+# Secrets and local settings (safe shared examples remain trackable)
+.env
+.env.*
+!.env.example
+!.env.sample
+*.pem
+*.key
+
+# Generated test and model-evaluation evidence
+.eval-runs/
+.eval-cache/
+.eval-workspaces/
+eval-results/
+eval-reports/
+eval-traces/
+test-results/
+playwright-report/
+coverage/

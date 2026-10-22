@@ -68,3 +68,5 @@
 sync.remote: "git+ssh://git@github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill.git"
 export:
     auto: true
+
+no-git-ops: false

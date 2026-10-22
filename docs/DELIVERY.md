@@ -29,3 +29,15 @@ PR检查和评审必须对应待合入的准确head SHA；PR可能测试合并�
 main已启用分支保护：必须通过PR、与最新main一致、必需的GitHub Actions `Windows CI`（app 15368）及准确head SHA上的 `Agent review` 状态，管理员同样受约束；禁强推、禁删除、要求解决讨论。Agent review由本次Agent完成真实代码与证据审查后发布，并链接对应的PR审查记录；新增提交没有该状态就不能沿用旧审查。它是维护者Agent审查，不是另一位GitHub用户的批准，required_approving_review_count=0；未宣称已获得独立人工评审。没有使用admin bypass。
 
 补充忽略规则已在独立临时Git仓库验证7项排除、8项保留及实际暂存清单；本地检查现为37项测试通过、0跳过。新的路径回归只验证离线替身，不改写原285次模型行为记录。后续准确SHA的远端结果另行追加，未完成前不称交付成功。
+## 2026-10-23：PR #1合入与首次同步复验完成
+
+| 阶段 | 精确提交 | Windows CI运行与结果 |
+|---|---|---|
+| dev推送 | `5f262b5c8dd0d24312e9f8a448012c3b5b72040d` | [39875017652](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/39875017652)，push/dev，success |
+| PR #1待合入head | `5f262b5c8dd0d24312e9f8a448012c3b5b72040d` | [39875022887](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/39875022887)，pull_request，success |
+| 实际main合入提交 | `a61204e88d9b469cc6ebb6b552e61e286618d8ff` | [39875106168](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/39875106168)，push/main，success |
+| dev快进同步 | `a61204e88d9b469cc6ebb6b552e61e286618d8ff` | [39875190750](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/39875190750)，push/dev，success |
+
+审查绑定上述head：[Agent审查记录](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/pull/1#pullrequestreview-5622345503)。PR在两项必需检查通过、mergeStateStatus=CLEAN后正常merge，没有admin bypass。main实际合入提交有两个父提交，原318a058、1545afe、a134c9a、0156f3d、5f262b5及各修复记录均保留。先核实main/push成功，再进行main和dev的祖先检查、ff-only及普通推送；四端refs已核实同为a61204e，工作区干净。此表是该次交付的固定证据，后续文档补交另走PR、检查、审查、合后复验和同步，最终refs以对应PR交付回执为准。
+
+托管Windows 2025使用锁定环境，37项测试通过；无收费出图、真实供应商或用户视觉验收，未发布标签。Actions出现checkout v4的Node20运行时弃用提示，宿主强制以Node24执行且任务成功；此非阻断提示未被改写为失败，也未静默更换固定Action版本。

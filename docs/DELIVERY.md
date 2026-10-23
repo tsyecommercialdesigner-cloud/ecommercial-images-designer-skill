@@ -1,5 +1,13 @@
 # Windows CI 与分支交付
 
+## 2026-10-23：76d累计修复交付准备
+
+用户接受76d.8.1的Sol显式状态上游overload未完成例外并授权关闭。原稿失败和候选成绩分别保留，见[自动编排报告](DSH-ORCHESTRATION-76d81.md)。本次从dev走PR→Windows CI与准确head上的Agent review→保留历史的merge commit→main合入CI，再沿用既有授权受控快进同步dev及其CI。评审仍为维护者Agent审查，不冒充独立人工批准；未改变分支保护或使用管理员绕过。实际SHA和运行结果完成后记录，不以准备阶段代替远端成功。
+
+共用check.ps1新增离线Node门禁；Actions固定setup-node v4完整SHA及Node24.21.0，解释器由已准备的uv环境提供，不依赖开发机.venv。该步骤不会连接Desktop、模型或MCP，也不修改用户安装配置。SSH fetch本次报publickey拒绝；使用既有gh凭据辅助器通过显式HTTPS地址fetch/push，不修改origin URL、SSH密钥或全局Git配置。
+
+本机core.autocrlf=true会使新签入的LF验证器／补丁和历史CRLF技能正文在规范化／重新检出后改变字节摘要。新增.gitattributes对已评测技能包和统一diff补丁禁用换行转换，保留原字节；保留正文空白检查，补丁仅豁免合法上下文空白行。暂存后逐文件核对Git blob和实际评测包，不把换行规范化造成的摘要变化误称作功能修复。
+
 工作流为 [windows-ci.yml](../.github/workflows/windows-ci.yml)，检查名为 `Windows CI`。它覆盖目标main的PR、main/dev推送及手动运行；没有路径过滤，因此dev快进推送也会触发检查。Windows 2025中使用uv 0.12.9、Python 3.12.14和锁定开发依赖；Actions固定到完整SHA，凭据不保留，权限仅contents:read，不使用供应商密钥。
 
 依赖准备完成后，本地与CI共用 [check.ps1](../scripts/check.ps1)。它遇到结构／场景校验或单元测试失败即失败，不调用模型行为评测、真实MCP或收费出图。已有42场景模型评测的证据单独保留，不用CI的单元测试冒充模型实跑。

@@ -1,0 +1,5 @@
+# Frozen skill snapshots contain deliberate CRLF/LF bytes. Preserve their hashes
+# in commits, archives and fresh checkouts instead of applying core.autocrlf.
+.agents/skills/ecommerce-image-designer/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# Unified-diff context includes meaningful single-space lines.
+patches/codex/*.patch -text whitespace=-blank-at-eol

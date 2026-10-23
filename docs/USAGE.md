@@ -2,9 +2,13 @@
 
 ## 范围与当前状态
 
+测试宿主现可在每个原生会话释放后自动校验和编译，见[编排操作与复验](DSH-ORCHESTRATION-76d81.md)。调用冻结runner时需显式传入现有Python路径；它在模型权限之外的测试协调进程执行，不改安装配置，不给模型新增工具。原稿失败和编译结果分别交付，候选仍待用户确认。本批Sol状态场景被上游过载阻断，未宣称全通过；日常会话没有自动钩子。
+
+状态协议见[76d.8.1 状态契约报告](DSH-STATE-CONTRACT-76d81.md)。未确认单图／局部恢复交一个 JSON 状态对象，可由 Python 3.10+ 标准库脚本独立校验、渲染或编译新的待审候选；脚本不联网，需外部编排方在既有权限内调用，日常宿主会话没有自动钩子。候选差异必须展示给用户，编译通过不等于方案批准或收费授权。原生首稿仍有失败，不能宣称两个模型原生均已完整通过。
+
 技能名称为 `ecommerce-image-designer`，目录为 `.agents/skills/ecommerce-image-designer/`，该目录包含独立运行所需的全部指令参考资料和 MIT 许可证。它不包含图像服务的安装程序或凭据。
 
-当前是 2026-10-22 的本地开发交付，尚无发行标签或经验证的发布提交，不提供虚构下载地址／SHA。此次只在 Windows 本地完成结构、资源与检查脚本验证；真实宿主发现、隐式选择、跨平台安装和收费出图的验证状态分别见 [VALIDATION.md](VALIDATION.md)。
+当前已有经PR及Windows CI验证的源码提交`17ac23245abfb01338e9df2ca16ab74fc749b03a`，仍无发行标签，不作为发布版本承诺。分支交付见[交付记录](DELIVERY.md)；真实Desktop/CLI发现与免费MCP集成的首轮结果见[宿主集成记录](HOST-INTEGRATION.md)，本地后续修复及12次主集＋3次恢复回归见[最新免费复验](HOST-CLI-RECOVERY.md)。后续修复尚未提交或发布，跨平台安装与收费出图尚未验证。
 
 ## Codex 中发现
 
@@ -17,6 +21,8 @@
 此轮开发只写本仓库技能，没有自动复制到用户技能目录、安装 MCP、修改宿主配置或更改凭据。其他宿主的发现位置和产品扩展应按其实际版本单独核实，未验证时不声称支持。
 
 ## 调用及预期行为
+
+本机 DeepSeek Harness Desktop `0.2.1-rc.2` 也已验证原生发现同一 `.agents/skills/ecommerce-image-designer/`，可用“使用 ecommerce-image-designer 技能”显式请求。`codeproxy-openai / gpt-6.1-sol` 与 `codeproxy-anthropic / claude-sonnet-5-5` 的首轮记录及失败见 [DSH 专项](DSH-DESKTOP-76d8.md)，当前包的恢复修复与免费复验见 [76d.8.1](DSH-RECOVERY-76d81.md)。释放机制已修复并保留持久化记录；当前完整主集八项尝试七项正常结束，Sol 恢复上游过载，Sonnet 来源／状态解释及冻结范围仍有语义失败，不宣称完整生产兼容。没有替用户安装新 Skill、改 profile 或开放收费权限。
 
 | 请求 | 预期 |
 |---|---|

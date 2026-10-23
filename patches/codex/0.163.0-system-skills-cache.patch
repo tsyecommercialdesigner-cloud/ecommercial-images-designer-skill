@@ -1,0 +1,709 @@
+diff --git a/codex-rs/Cargo.lock b/codex-rs/Cargo.lock
+--- a/codex-rs/Cargo.lock
++++ b/codex-rs/Cargo.lock
+@@ -4604,6 +4604,7 @@
+  "serde",
+  "serde_yaml",
+  "shlex",
++ "tempfile",
+  "thiserror 2.0.18",
+  "tracing",
+ ]
+diff --git a/codex-rs/app-server/tests/suite/v2/skills_list.rs b/codex-rs/app-server/tests/suite/v2/skills_list.rs
+--- a/codex-rs/app-server/tests/suite/v2/skills_list.rs
++++ b/codex-rs/app-server/tests/suite/v2/skills_list.rs
+@@ -273,7 +273,7 @@
+ }
+ 
+ #[tokio::test]
+-async fn skills_list_runtime_enable_refreshes_shared_system_skill_cache() -> Result<()> {
++async fn skills_list_runtime_enable_preserves_legacy_cache_and_discovers_current_package() -> Result<()> {
+     let codex_home = TempDir::new()?;
+     let cwd = TempDir::new()?;
+     let stale_skill_path = codex_home
+@@ -360,7 +360,8 @@
+             .iter()
+             .all(|skill| skill.name != "stale-system-skill")
+     );
+-    assert!(!stale_skill_path.exists());
++    // Legacy readers may still use this directory; enablement must not remove it.
++    assert!(stale_skill_path.exists());
+     Ok(())
+ }
+ 
+diff --git a/codex-rs/ext/skills/src/host_roots_tests.rs b/codex-rs/ext/skills/src/host_roots_tests.rs
+--- a/codex-rs/ext/skills/src/host_roots_tests.rs
++++ b/codex-rs/ext/skills/src/host_roots_tests.rs
+@@ -283,7 +283,10 @@
+             (SkillScope::Repo, project_folder.join("skills")),
+             (SkillScope::User, user_folder.join("skills")),
+             (SkillScope::User, home_folder.join(".agents/skills")),
+-            (SkillScope::System, user_folder.join("skills/.system")),
++            (
++                SkillScope::System,
++                codex_skills::system_cache_root_dir(&user_folder)
++            ),
+             (SkillScope::Admin, system_folder.join("skills")),
+         ]
+     );
+@@ -620,7 +623,11 @@
+     );
+     let user_skill = write_skill(&user_skills, "user-duplicate", "duplicate-skill");
+     let home_skill = write_skill(&home_folder.join(".agents/skills"), "home", "home-skill");
+-    let system_skill = write_skill(&codex_home.join("skills/.system"), "system", "system-skill");
++    let system_skill = write_skill(
++        &codex_skills::system_cache_root_dir(&codex_home),
++        "system",
++        "system-skill",
++    );
+     let admin_skill = write_skill(&system_folder.join("skills"), "admin", "admin-skill");
+     let repo_agent_skill = write_skill(
+         &repository.join(".agents/skills"),
+diff --git a/codex-rs/ext/skills/src/host_service.rs b/codex-rs/ext/skills/src/host_service.rs
+--- a/codex-rs/ext/skills/src/host_service.rs
++++ b/codex-rs/ext/skills/src/host_service.rs
+@@ -220,9 +220,8 @@
+         fs: Option<Arc<dyn ExecutorFileSystem>>,
+     ) -> Vec<HostSkillRoot> {
+         let bundled_skills_enabled = bundled_skills_enabled_from_stack(&input.config_layer_stack);
+-        if bundled_skills_enabled {
+-            self.ensure_system_skills_installed();
+-        }
++        let bundled_skills_available =
++            bundled_skills_enabled && self.ensure_system_skills_installed();
+         let mut roots = resolve_skill_roots(
+             fs,
+             &input.config_layer_stack,
+@@ -231,7 +230,7 @@
+             self.extra_roots(),
+         )
+         .await;
+-        if !bundled_skills_enabled {
++        if !bundled_skills_available {
+             roots.retain(|root| root.scope != SkillScope::System);
+         }
+         roots
+@@ -245,10 +244,10 @@
+         request_root_snapshots: Option<&RequestSkillRootSnapshots>,
+     ) -> HostSkillsSnapshot {
+         let bundled_skills_enabled = bundled_skills_enabled_from_stack(&input.config_layer_stack);
+-        if bundled_skills_enabled {
+-            self.ensure_system_skills_installed();
+-        }
+-        let use_cwd_cache = fs.is_some();
++        let bundled_skills_available =
++            bundled_skills_enabled && self.ensure_system_skills_installed();
++        // A failed integrity check must not return an earlier system snapshot.
++        let use_cwd_cache = fs.is_some() && (!bundled_skills_enabled || bundled_skills_available);
+         let cache_snapshot_by_cwd = use_cwd_cache && input.effective_skill_roots.is_empty();
+         if cache_snapshot_by_cwd
+             && !force_reload
+@@ -265,7 +264,7 @@
+             self.extra_roots(),
+         )
+         .await;
+-        if !bundled_skills_enabled {
++        if !bundled_skills_available {
+             roots.retain(|root| root.scope != SkillScope::System);
+         }
+         let skill_config_rules = skill_config_rules_from_stack(&input.config_layer_stack);
+@@ -409,9 +408,13 @@
+         }
+     }
+ 
+-    fn ensure_system_skills_installed(&self) {
+-        if let Err(err) = install_system_skills(&self.codex_home) {
+-            tracing::error!("failed to install system skills: {err}");
++    fn ensure_system_skills_installed(&self) -> bool {
++        match install_system_skills(&self.codex_home) {
++            Ok(()) => true,
++            Err(err) => {
++                tracing::error!("failed to install system skills: {err}");
++                false
++            }
+         }
+     }
+ }
+diff --git a/codex-rs/ext/skills/src/host_service_tests.rs b/codex-rs/ext/skills/src/host_service_tests.rs
+--- a/codex-rs/ext/skills/src/host_service_tests.rs
++++ b/codex-rs/ext/skills/src/host_service_tests.rs
+@@ -320,7 +320,11 @@
+ 
+     assert!(watchable_paths.contains(&codex_home.path().join("skills").abs()));
+     assert!(!watchable_paths.contains(&plugin_skill_root.path));
+-    assert!(!watchable_paths.contains(&codex_home.path().join("skills/.system").abs()));
++    assert!(
++        !watchable_paths.contains(&codex_skills::system_cache_root_dir(
++            &codex_home.path().abs()
++        ))
++    );
+ }
+ 
+ #[tokio::test]
+@@ -356,6 +360,14 @@
+         .outcome()
+         .skills
+         .iter()
++        // The service legitimately includes installed home skills. Assert the
++        // exact catalog owned by this fixture, independent of the user's home.
++        .filter(|skill| {
++            skill
++                .path_to_skills_md
++                .to_path_buf()
++                .starts_with(codex_home.path())
++        })
+         .map(|skill| (skill.name.as_str(), skill.plugin_id.as_deref()))
+         .collect::<Vec<_>>();
+ 
+@@ -865,7 +877,8 @@
+ async fn skills_for_config_excludes_bundled_skills_when_disabled_in_config() {
+     let codex_home = tempfile::tempdir().expect("tempdir");
+     let cwd = tempfile::tempdir().expect("tempdir");
+-    let bundled_skill_dir = codex_home.path().join("skills/.system/bundled-skill");
++    let bundled_skill_dir =
++        codex_skills::system_cache_root_dir(&codex_home.path().abs()).join("bundled-skill");
+     fs::create_dir_all(&bundled_skill_dir).expect("create bundled skill dir");
+     fs::write(
+         bundled_skill_dir.join("SKILL.md"),
+@@ -1012,3 +1025,46 @@
+         .expect("demo skill should be discovered");
+     assert_eq!(child_outcome.is_skill_enabled(child_skill), true);
+ }
++
++#[tokio::test]
++async fn invalid_published_system_cache_is_not_discovered_or_returned_from_snapshot() {
++    let codex_home = tempfile::tempdir().expect("tempdir");
++    let cwd = tempfile::tempdir().expect("tempdir");
++    write_user_skill(&codex_home, "user", "user-skill", "unaffected user skill");
++    let stack = config_stack(&codex_home, "");
++    let service = HostSkillsService::new(codex_home.path().abs(), true);
++    let input = HostSkillsLoadInput::new(cwd.path().abs(), Vec::new(), stack);
++    let before = service
++        .for_request()
++        .snapshot_for_cwd(&input, false, Some(Arc::clone(&LOCAL_FS)))
++        .await;
++    assert!(
++        before
++            .outcome()
++            .skills
++            .iter()
++            .any(|skill| skill.scope == SkillScope::System)
++    );
++    let cache = codex_skills::system_cache_root_dir(&codex_home.path().abs());
++    let marker = cache.join(".codex-system-skills.marker");
++    fs::write(&marker, "corrupted fixture").unwrap();
++    let after = service
++        .for_request()
++        .snapshot_for_cwd(&input, false, Some(Arc::clone(&LOCAL_FS)))
++        .await;
++    assert!(
++        after
++            .outcome()
++            .skills
++            .iter()
++            .all(|skill| skill.scope != SkillScope::System)
++    );
++    assert!(
++        after
++            .outcome()
++            .skills
++            .iter()
++            .any(|skill| skill.name == "user-skill")
++    );
++    assert_eq!(fs::read_to_string(marker).unwrap(), "corrupted fixture");
++}
+diff --git a/codex-rs/skills/Cargo.toml b/codex-rs/skills/Cargo.toml
+--- a/codex-rs/skills/Cargo.toml
++++ b/codex-rs/skills/Cargo.toml
+@@ -22,6 +22,7 @@
+ serde = { workspace = true, features = ["derive"] }
+ serde_yaml = { workspace = true }
+ shlex = { workspace = true }
++tempfile = { workspace = true }
+ thiserror = { workspace = true }
+ tracing = { workspace = true }
+ 
+diff --git a/codex-rs/skills/src/assets/samples/imagegen/references/cli.md b/codex-rs/skills/src/assets/samples/imagegen/references/cli.md
+--- a/codex-rs/skills/src/assets/samples/imagegen/references/cli.md
++++ b/codex-rs/skills/src/assets/samples/imagegen/references/cli.md
+@@ -13,11 +13,13 @@
+ Real API calls require **network access** + `OPENAI_API_KEY`. `--dry-run` does not.
+ 
+ ## Quick start (works from any repo)
+-Set a stable path to the skill CLI (default `CODEX_HOME` is `~/.codex`):
+-
+-```
+-export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
+-export IMAGE_GEN="$CODEX_HOME/skills/.system/imagegen/scripts/image_gen.py"
++Use the absolute imagegen skill directory shown by the host for the loaded `SKILL.md`.
++Do not assume a fixed cache path or select the newest directory by name. Replace
++`<loaded-imagegen-skill-directory>` below with that actual absolute directory:
++
++```bash
++export IMAGEGEN_SKILL_DIR="<loaded-imagegen-skill-directory>"
++export IMAGE_GEN="$IMAGEGEN_SKILL_DIR/scripts/image_gen.py"
+ ```
+ 
+ Install dependencies into that environment with its package manager. In uv-managed environments, `uv pip install ...` remains the preferred path.
+diff --git a/codex-rs/skills/src/assets/samples/imagegen/references/image-api.md b/codex-rs/skills/src/assets/samples/imagegen/references/image-api.md
+--- a/codex-rs/skills/src/assets/samples/imagegen/references/image-api.md
++++ b/codex-rs/skills/src/assets/samples/imagegen/references/image-api.md
+@@ -68,7 +68,7 @@
+ 
+ ## Transparent backgrounds
+ 
+-`gpt-image-2` does not currently support the Image API `background=transparent` parameter. In explicit CLI/API fallback mode, keep `gpt-image-2` when a flat chroma-key background plus local alpha extraction with `python "${CODEX_HOME:-$HOME/.codex}/skills/.system/imagegen/scripts/remove_chroma_key.py"` is acceptable.
++`gpt-image-2` does not currently support the Image API `background=transparent` parameter. In explicit CLI/API fallback mode, keep `gpt-image-2` when a flat chroma-key background plus local alpha extraction with `python "$IMAGEGEN_SKILL_DIR/scripts/remove_chroma_key.py"` (set `IMAGEGEN_SKILL_DIR` to the actual absolute directory of the host-loaded imagegen `SKILL.md`, as described in `cli.md`) is acceptable.
+ 
+ Use CLI `gpt-image-1.5` with `background=transparent` and a transparent-capable output format such as `png` or `webp` only after the user explicitly confirms that fallback, unless they already requested `gpt-image-1.5`, `scripts/image_gen.py`, or CLI fallback. If the user asks for true/native transparency, the subject is too complex for clean chroma-key removal, or local background removal fails validation, explain the tradeoff and ask before switching.
+ 
+diff --git a/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py b/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py
+--- a/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py
++++ b/codex-rs/skills/src/assets/samples/skill-creator/scripts/init_skill.py
+@@ -18,6 +18,8 @@
+ import sys
+ from pathlib import Path
+ 
++# The bundled cache is immutable; do not create sibling __pycache__ files.
++sys.dont_write_bytecode = True
+ from generate_openai_yaml import write_openai_yaml
+ 
+ MAX_SKILL_NAME_LENGTH = 64
+diff --git a/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py b/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py
+--- a/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py
++++ b/codex-rs/skills/src/assets/samples/skill-installer/scripts/install-skill-from-github.py
+@@ -14,6 +14,8 @@
+ import urllib.parse
+ import zipfile
+ 
++# The bundled cache is immutable; do not create sibling __pycache__ files.
++sys.dont_write_bytecode = True
+ from github_utils import github_request
+ 
+ DEFAULT_REF = "main"
+diff --git a/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py b/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py
+--- a/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py
++++ b/codex-rs/skills/src/assets/samples/skill-installer/scripts/list-skills.py
+@@ -9,6 +9,8 @@
+ import sys
+ import urllib.error
+ 
++# The bundled cache is immutable; do not create sibling __pycache__ files.
++sys.dont_write_bytecode = True
+ from github_utils import github_api_contents_url, github_request
+ 
+ DEFAULT_REPO = "openai/skills"
+diff --git a/codex-rs/skills/src/lib.rs b/codex-rs/skills/src/lib.rs
+--- a/codex-rs/skills/src/lib.rs
++++ b/codex-rs/skills/src/lib.rs
+@@ -49,12 +49,13 @@
+ use std::fs;
+ use std::hash::Hash;
+ use std::hash::Hasher;
++use std::path::Path;
+ 
+ use thiserror::Error;
+ 
+ const SYSTEM_SKILLS_DIR: Dir = include_dir::include_dir!("$CARGO_MANIFEST_DIR/src/assets/samples");
+ 
+-const SYSTEM_SKILLS_DIR_NAME: &str = ".system";
++const SYSTEM_SKILLS_DIR_NAME: &str = ".system-cache-v2";
+ const SKILLS_DIR_NAME: &str = "skills";
+ const SYSTEM_SKILLS_MARKER_FILENAME: &str = ".codex-system-skills.marker";
+ const SYSTEM_SKILLS_MARKER_SALT: &str = "v1";
+@@ -64,39 +65,125 @@
+     codex_home
+         .join(SKILLS_DIR_NAME)
+         .join(SYSTEM_SKILLS_DIR_NAME)
+-}
+-
+-/// Installs embedded system skills into `CODEX_HOME/skills/.system`.
++        .join(embedded_system_skills_fingerprint())
++}
++
++/// Installs an immutable, fingerprint-scoped cache without modifying other builds.
+ ///
+-/// Clears any existing system skills directory first and then writes the embedded
+-/// skills directory into place.
+-///
+-/// To avoid doing unnecessary work on every startup, a marker file is written
+-/// with a fingerprint of the embedded directory. When the marker matches, the
+-/// install is skipped.
++/// Populate a private sibling staging directory, write its completion marker last,
++/// then atomically publish it by rename. Readers never receive a staging path.
++/// Legacy `.system` and other fingerprints are deliberately not garbage collected:
++/// another process may still be reading them. Invalid published caches fail closed.
+ pub fn install_system_skills(codex_home: &AbsolutePathBuf) -> Result<(), SystemSkillsError> {
+-    let skills_root_dir = codex_home.join(SKILLS_DIR_NAME);
+-    fs::create_dir_all(skills_root_dir.as_path())
+-        .map_err(|source| SystemSkillsError::io("create skills root dir", source))?;
+-
+-    let dest_system = system_cache_root_dir(codex_home);
+-
+-    let marker_path = dest_system.join(SYSTEM_SKILLS_MARKER_FILENAME);
+-    let expected_fingerprint = embedded_system_skills_fingerprint();
+-    if dest_system.as_path().is_dir()
+-        && read_marker(&marker_path).is_ok_and(|marker| marker == expected_fingerprint)
++    install_system_skills_at(
++        &system_cache_root_dir(codex_home),
++        &embedded_system_skills_fingerprint(),
++    )
++}
++
++fn install_system_skills_at(
++    dest: &AbsolutePathBuf,
++    fingerprint: &str,
++) -> Result<(), SystemSkillsError> {
++    let cache_parent = dest.as_path().parent().expect("system cache has a parent");
++    fs::create_dir_all(cache_parent)
++        .map_err(|source| SystemSkillsError::io("create system cache parent", source))?;
++    if fs::symlink_metadata(dest.as_path()).is_ok() {
++        return verify_published_cache(dest, fingerprint);
++    }
++
++    let staging = tempfile::Builder::new()
++        .prefix(".staging-")
++        .tempdir_in(cache_parent)
++        .map_err(|source| SystemSkillsError::io("create system skills staging dir", source))?;
++    write_embedded_dir(&SYSTEM_SKILLS_DIR, staging.path())?;
++    fs::write(
++        staging.path().join(SYSTEM_SKILLS_MARKER_FILENAME),
++        format!("{fingerprint}\n"),
++    )
++    .map_err(|source| SystemSkillsError::io("write system skills marker", source))?;
++
++    match fs::rename(staging.path(), dest.as_path()) {
++        Ok(()) => Ok(()),
++        // Another installer can win the same-fingerprint publication race. Verify
++        // its entire package before accepting it; never remove the winner.
++        Err(_) if fs::symlink_metadata(dest.as_path()).is_ok() => {
++            verify_published_cache(dest, fingerprint)
++        }
++        Err(source) => Err(SystemSkillsError::io("publish system skills cache", source)),
++    }
++    // TempDir cleans only this process's private staging path, if still present.
++}
++
++fn verify_published_cache(
++    dest: &AbsolutePathBuf,
++    fingerprint: &str,
++) -> Result<(), SystemSkillsError> {
++    let metadata = fs::symlink_metadata(dest.as_path())
++        .map_err(|source| SystemSkillsError::io("inspect published system skills", source))?;
++    if !metadata.is_dir() || metadata.file_type().is_symlink() {
++        return Err(invalid_cache());
++    }
++    let marker = dest.join(SYSTEM_SKILLS_MARKER_FILENAME);
++    let marker_metadata = fs::symlink_metadata(marker.as_path())
++        .map_err(|source| SystemSkillsError::io("inspect system skills marker", source))?;
++    if !marker_metadata.is_file() || marker_metadata.file_type().is_symlink() {
++        return Err(invalid_cache());
++    }
++    if read_marker(&marker)? != fingerprint {
++        return Err(invalid_cache());
++    }
++    verify_embedded_dir(&SYSTEM_SKILLS_DIR, dest.as_path())
++}
++
++fn invalid_cache() -> SystemSkillsError {
++    SystemSkillsError::io(
++        "validate published system skills (left unchanged)",
++        std::io::Error::new(
++            std::io::ErrorKind::InvalidData,
++            "incomplete or invalid cache",
++        ),
++    )
++}
++
++fn verify_embedded_dir(dir: &Dir<'_>, dest: &Path) -> Result<(), SystemSkillsError> {
++    for actual in fs::read_dir(dest.join(dir.path()))
++        .map_err(|source| SystemSkillsError::io("list system skills entries", source))?
+     {
+-        return Ok(());
+-    }
+-
+-    if dest_system.as_path().exists() {
+-        fs::remove_dir_all(dest_system.as_path())
+-            .map_err(|source| SystemSkillsError::io("remove existing system skills dir", source))?;
+-    }
+-
+-    write_embedded_dir(&SYSTEM_SKILLS_DIR, &dest_system)?;
+-    fs::write(marker_path.as_path(), format!("{expected_fingerprint}\n"))
+-        .map_err(|source| SystemSkillsError::io("write system skills marker", source))?;
++        let actual =
++            actual.map_err(|source| SystemSkillsError::io("list system skills entry", source))?;
++        let name = actual.file_name();
++        let is_marker = dir.path().as_os_str().is_empty() && name == SYSTEM_SKILLS_MARKER_FILENAME;
++        if !is_marker
++            && !dir
++                .entries()
++                .iter()
++                .any(|entry| entry.path().file_name() == Some(name.as_os_str()))
++        {
++            return Err(invalid_cache());
++        }
++    }
++    for entry in dir.entries() {
++        let path = dest.join(entry.path());
++        let metadata = fs::symlink_metadata(&path)
++            .map_err(|source| SystemSkillsError::io("inspect system skills entry", source))?;
++        if metadata.file_type().is_symlink() {
++            return Err(invalid_cache());
++        }
++        match entry {
++            include_dir::DirEntry::Dir(subdir) if metadata.is_dir() => {
++                verify_embedded_dir(subdir, dest)?;
++            }
++            include_dir::DirEntry::File(file) if metadata.is_file() => {
++                let bytes = fs::read(&path)
++                    .map_err(|source| SystemSkillsError::io("read system skills entry", source))?;
++                if bytes != file.contents() {
++                    return Err(invalid_cache());
++                }
++            }
++            _ => return Err(invalid_cache()),
++        }
++    }
+     Ok(())
+ }
+ 
+@@ -143,22 +230,22 @@
+ /// Writes the embedded `include_dir::Dir` to disk under `dest`.
+ ///
+ /// Preserves the embedded directory structure.
+-fn write_embedded_dir(dir: &Dir<'_>, dest: &AbsolutePathBuf) -> Result<(), SystemSkillsError> {
+-    fs::create_dir_all(dest.as_path())
++fn write_embedded_dir(dir: &Dir<'_>, dest: &Path) -> Result<(), SystemSkillsError> {
++    fs::create_dir_all(dest)
+         .map_err(|source| SystemSkillsError::io("create system skills dir", source))?;
+ 
+     for entry in dir.entries() {
+         match entry {
+             include_dir::DirEntry::Dir(subdir) => {
+                 let subdir_dest = dest.join(subdir.path());
+-                fs::create_dir_all(subdir_dest.as_path()).map_err(|source| {
++                fs::create_dir_all(subdir_dest).map_err(|source| {
+                     SystemSkillsError::io("create system skills subdir", source)
+                 })?;
+                 write_embedded_dir(subdir, dest)?;
+             }
+             include_dir::DirEntry::File(file) => {
+                 let path = dest.join(file.path());
+-                if let Some(parent) = path.as_path().parent() {
++                if let Some(parent) = path.parent() {
+                     fs::create_dir_all(parent).map_err(|source| {
+                         SystemSkillsError::io("create system skills file parent", source)
+                     })?;
+@@ -212,3 +299,6 @@
+         );
+     }
+ }
++
++#[cfg(test)]
++mod system_cache_tests;
+diff --git a/codex-rs/skills/src/system_cache_tests.rs b/codex-rs/skills/src/system_cache_tests.rs
+new file mode 100644
+--- /dev/null
++++ b/codex-rs/skills/src/system_cache_tests.rs
+@@ -0,0 +1,201 @@
++//! Native filesystem and cross-process tests; no model, MCP, or user home access.
++use super::*;
++use std::process::Command;
++use std::time::Duration;
++use std::time::Instant;
++
++fn home(path: &Path) -> AbsolutePathBuf {
++    AbsolutePathBuf::try_from(path).expect("absolute fixture home")
++}
++
++#[test]
++fn published_cache_is_complete_and_warm_start_is_read_only() {
++    let fixture = tempfile::tempdir().unwrap();
++    let home = home(fixture.path());
++    install_system_skills(&home).unwrap();
++    let dest = system_cache_root_dir(&home);
++    verify_published_cache(&dest, &embedded_system_skills_fingerprint()).unwrap();
++    let marker = dest.join(SYSTEM_SKILLS_MARKER_FILENAME);
++    let modified = fs::metadata(&marker).unwrap().modified().unwrap();
++    install_system_skills(&home).unwrap();
++    assert_eq!(fs::metadata(&marker).unwrap().modified().unwrap(), modified);
++}
++
++#[test]
++fn legacy_other_versions_and_abandoned_staging_are_preserved() {
++    let fixture = tempfile::tempdir().unwrap();
++    let home = home(fixture.path());
++    let legacy = home.join("skills/.system/in-use.txt");
++    fs::create_dir_all(legacy.parent().unwrap()).unwrap();
++    fs::write(&legacy, "legacy reader").unwrap();
++    let parent = home.join("skills/.system-cache-v2");
++    let other = parent.join("other-build");
++    install_system_skills_at(&other, "other-build").unwrap();
++    let abandoned = parent.join(".staging-crashed");
++    fs::create_dir_all(&abandoned).unwrap();
++    fs::write(abandoned.join("partial"), "unpublished").unwrap();
++    install_system_skills(&home).unwrap();
++    assert_eq!(fs::read_to_string(&legacy).unwrap(), "legacy reader");
++    verify_published_cache(&other, "other-build").unwrap();
++    assert_eq!(
++        fs::read_to_string(abandoned.join("partial")).unwrap(),
++        "unpublished"
++    );
++    assert_ne!(system_cache_root_dir(&home), other);
++}
++
++#[test]
++fn invalid_published_marker_is_not_deleted_or_replaced() {
++    let fixture = tempfile::tempdir().unwrap();
++    let home = home(fixture.path());
++    let dest = system_cache_root_dir(&home);
++    fs::create_dir_all(&dest).unwrap();
++    let evidence = dest.join(SYSTEM_SKILLS_MARKER_FILENAME);
++    fs::write(&evidence, "invalid").unwrap();
++    assert!(install_system_skills(&home).is_err());
++    assert_eq!(fs::read_to_string(&evidence).unwrap(), "invalid");
++}
++
++#[test]
++fn matching_marker_does_not_hide_missing_or_modified_files() {
++    let fixture = tempfile::tempdir().unwrap();
++    let home = home(fixture.path());
++    install_system_skills(&home).unwrap();
++    let file = system_cache_root_dir(&home).join("skill-creator/SKILL.md");
++    fs::write(&file, "corrupted fixture").unwrap();
++    assert!(install_system_skills(&home).is_err());
++    assert_eq!(fs::read_to_string(&file).unwrap(), "corrupted fixture");
++    fs::remove_file(&file).unwrap();
++    assert!(install_system_skills(&home).is_err());
++    assert!(!file.exists());
++}
++
++#[test]
++fn unexpected_files_are_rejected_without_removal() {
++    let fixture = tempfile::tempdir().unwrap();
++    let home = home(fixture.path());
++    install_system_skills(&home).unwrap();
++    let extra = system_cache_root_dir(&home).join("unexpected.md");
++    fs::write(&extra, "fixture").unwrap();
++    assert!(install_system_skills(&home).is_err());
++    assert_eq!(fs::read_to_string(&extra).unwrap(), "fixture");
++}
++
++#[test]
++#[ignore = "entry point used only by the cross-process parent test"]
++fn installer_child() {
++    let dir = std::env::var_os("CODEX_CACHE_TEST_HOME").expect("owned fixture home");
++    let variant = std::env::var("CODEX_CACHE_TEST_VARIANT").unwrap();
++    let home = home(Path::new(&dir));
++    fs::write(home.join(format!("ready-{}", std::process::id())), b"ready").unwrap();
++    let deadline = Instant::now() + Duration::from_secs(30);
++    while !home.join("go").exists() {
++        assert!(Instant::now() < deadline, "start barrier timed out");
++        std::thread::sleep(Duration::from_millis(5));
++    }
++    let dest = if variant == "current" {
++        system_cache_root_dir(&home)
++    } else {
++        home.join("skills/.system-cache-v2").join(&variant)
++    };
++    let fingerprint = if variant == "current" {
++        embedded_system_skills_fingerprint()
++    } else {
++        variant
++    };
++    install_system_skills_at(&dest, &fingerprint).unwrap();
++    for _ in 0..20 {
++        verify_published_cache(&dest, &fingerprint).unwrap();
++        std::thread::yield_now();
++    }
++}
++
++#[test]
++fn simultaneous_processes_publish_complete_isolated_caches() {
++    // Two different identities exercise path isolation; both use this build's
++    // actual embedded bytes. This is not a two-binary host compatibility test.
++    for _ in 0..4 {
++        let fixture = tempfile::tempdir().unwrap();
++        let home = home(fixture.path());
++        let exe = std::env::current_exe().unwrap();
++        let mut children = Vec::new();
++        for index in 0..8 {
++            children.push(
++                Command::new(&exe)
++                    .args([
++                        "--exact",
++                        "system_cache_tests::installer_child",
++                        "--ignored",
++                    ])
++                    .env("CODEX_CACHE_TEST_HOME", fixture.path())
++                    .env(
++                        "CODEX_CACHE_TEST_VARIANT",
++                        if index % 2 == 0 {
++                            "current"
++                        } else {
++                            "other-build"
++                        },
++                    )
++                    .spawn()
++                    .unwrap(),
++            );
++        }
++        let deadline = Instant::now() + Duration::from_secs(30);
++        while fs::read_dir(fixture.path())
++            .unwrap()
++            .filter(|entry| {
++                entry
++                    .as_ref()
++                    .unwrap()
++                    .file_name()
++                    .to_string_lossy()
++                    .starts_with("ready-")
++            })
++            .count()
++            != children.len()
++        {
++            assert!(Instant::now() < deadline, "children did not reach barrier");
++            std::thread::sleep(Duration::from_millis(5));
++        }
++        fs::write(home.join("go"), b"go").unwrap();
++        // While writers run, every visible published path must already be complete.
++        loop {
++            let mut running = false;
++            for child in &mut children {
++                running |= child.try_wait().unwrap().is_none();
++            }
++            for (dest, fingerprint) in [
++                (
++                    system_cache_root_dir(&home),
++                    embedded_system_skills_fingerprint(),
++                ),
++                (
++                    home.join("skills/.system-cache-v2/other-build"),
++                    "other-build".to_string(),
++                ),
++            ] {
++                if dest.exists() {
++                    verify_published_cache(&dest, &fingerprint).unwrap();
++                }
++            }
++            if !running {
++                break;
++            }
++            assert!(Instant::now() < deadline, "installer processes timed out");
++            std::thread::sleep(Duration::from_millis(1));
++        }
++        for child in &mut children {
++            assert!(child.wait().unwrap().success(), "installer child failed");
++        }
++        verify_published_cache(
++            &system_cache_root_dir(&home),
++            &embedded_system_skills_fingerprint(),
++        )
++        .unwrap();
++        verify_published_cache(
++            &home.join("skills/.system-cache-v2/other-build"),
++            "other-build",
++        )
++        .unwrap();
++    }
++}

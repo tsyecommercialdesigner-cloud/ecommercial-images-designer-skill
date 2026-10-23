@@ -1,5 +1,7 @@
 # 发现、调用与任务交付
 
+团队操作以根目录[MANUAL.md](../MANUAL.md)为准：固定快照、完整11文件分发、成员验收及升级回滚集中维护，本文保留简要调用说明和历史验证链接。
+
 ## 范围与当前状态
 
 测试宿主现可在每个原生会话释放后自动校验和编译，见[编排操作与复验](DSH-ORCHESTRATION-76d81.md)。调用冻结runner时需显式传入现有Python路径；它在模型权限之外的测试协调进程执行，不改安装配置，不给模型新增工具。原稿失败和编译结果分别交付，候选仍待用户确认。本批Sol状态场景被上游过载阻断，未宣称全通过；日常会话没有自动钩子。
@@ -8,7 +10,7 @@
 
 技能名称为 `ecommerce-image-designer`，目录为 `.agents/skills/ecommerce-image-designer/`，该目录包含独立运行所需的全部指令参考资料和 MIT 许可证。它不包含图像服务的安装程序或凭据。
 
-当前已有经PR及Windows CI验证的源码提交`17ac23245abfb01338e9df2ca16ab74fc749b03a`，仍无发行标签，不作为发布版本承诺。分支交付见[交付记录](DELIVERY.md)；真实Desktop/CLI发现与免费MCP集成的首轮结果见[宿主集成记录](HOST-INTEGRATION.md)，本地后续修复及12次主集＋3次恢复回归见[最新免费复验](HOST-CLI-RECOVERY.md)。后续修复尚未提交或发布，跨平台安装与收费出图尚未验证。
+当前团队分发采用已合入并通过Windows CI的固定快照`0be00e0b8837e9f06633ce5b7504f14bfa711992`，没有发行标签或已发布安装包承诺。本次MANUAL属于该快照之后新增的文档，不能声称历史提交已包含它。分支交付见[交付记录](DELIVERY.md)，各宿主历史与当前包覆盖边界在[手册版本表](../MANUAL.md#已验证与仍需验收的范围)分别记录；跨平台安装与收费出图尚未验证。
 
 ## Codex 中发现
 
@@ -16,13 +18,13 @@
 
 在此仓库新会话中检查技能选择器是否出现 `ecommerce-image-designer`，并确认来源指向本仓库的入口。若列表未更新，按宿主文档刷新或重启。文件存在和 YAML 校验成功均不能证明已被宿主发现。
 
-在其他工作区使用时，可将**完整技能目录**部署到所需作用域的 `.agents/skills/ecommerce-image-designer/`。先确认来源版本、比较同名目录和本地改动，不默认覆盖。复制包含所有 `references/`、`agents/` 和许可证；开发用 tests／evals 不属于运行依赖。技能以技能根解析参考资料，以用户工作目录或指定目录保存设计档案，不依赖本仓库的绝对盘符。
+在其他工作区使用时，可将**完整技能目录**部署到所需作用域的 `.agents/skills/ecommerce-image-designer/`。先确认来源版本、比较同名目录和本地改动，不默认覆盖。复制包含所有 `references/`、`scripts/`、`agents/` 和许可证，共11文件，清单和可执行步骤见MANUAL；开发用tests／evals不属于运行依赖。技能以技能根解析参考资料，以用户工作目录或指定目录保存设计档案，不依赖本仓库的绝对盘符。
 
 此轮开发只写本仓库技能，没有自动复制到用户技能目录、安装 MCP、修改宿主配置或更改凭据。其他宿主的发现位置和产品扩展应按其实际版本单独核实，未验证时不声称支持。
 
 ## 调用及预期行为
 
-本机 DeepSeek Harness Desktop `0.2.1-rc.2` 也已验证原生发现同一 `.agents/skills/ecommerce-image-designer/`，可用“使用 ecommerce-image-designer 技能”显式请求。`codeproxy-openai / gpt-6.1-sol` 与 `codeproxy-anthropic / claude-sonnet-5-5` 的首轮记录及失败见 [DSH 专项](DSH-DESKTOP-76d8.md)，当前包的恢复修复与免费复验见 [76d.8.1](DSH-RECOVERY-76d81.md)。释放机制已修复并保留持久化记录；当前完整主集八项尝试七项正常结束，Sol 恢复上游过载，Sonnet 来源／状态解释及冻结范围仍有语义失败，不宣称完整生产兼容。没有替用户安装新 Skill、改 profile 或开放收费权限。
+本机 DeepSeek Harness Desktop `0.2.1-rc.2` 已验证项目级原生发现，可明确请求该技能。两个codeproxy路由的首轮记录见[DSH专项](DSH-DESKTOP-76d8.md)，最新结果见[自动编排报告](DSH-ORCHESTRATION-76d81.md)：八项尝试七项正常结束，原稿5/7、五份正向候选5/5，两个反例不编译。Sol显式状态overload未评测，用户接受后关闭76d.8.1；不是Sol恢复失败，也不能将候选通过改判成原稿通过。日常会话没有自动编译钩子，不宣称完整生产兼容。
 
 | 请求 | 预期 |
 |---|---|

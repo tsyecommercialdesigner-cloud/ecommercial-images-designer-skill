@@ -4,6 +4,8 @@
 
 ## 指定服务与选择规则
 
+仅查询能力／配置状态时，使用 [状态契约](references/state-contract.md) 的 status。每次工具返回绑定一项 capabilities，模型 ID 复制实际目录；query_succeeded、configured 与 upstream/performance 分开，免费目录查询后两项均 not_tested。该模式没有自由就绪摘要、历史连通判断或选型推荐；实际选择／执行另按以下流程及 S3 授权处理。
+
 图像生成和编辑仅由以下两个 MCP Server 执行：
 
 | 用户指定的 MCP Server | 本会话实际工具前缀 |

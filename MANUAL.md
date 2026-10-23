@@ -84,7 +84,7 @@ New-Item -ItemType Directory -Path $ReleaseDir,$StageDir -ErrorAction Stop | Out
 $ZipName = 'ecommerce-image-designer-' + $SkillRevision.Substring(0,7) + '.zip'
 $ZipPath = Join-Path $ReleaseDir $ZipName
 $SkillTree = $SkillRevision + ':.agents/skills/ecommerce-image-designer'
-git -C $SourceRepo archive --format=zip --prefix=ecommerce-image-designer/ "--output=$ZipPath" $SkillTree
+git -C $SourceRepo -c core.autocrlf=false archive --format=zip --prefix=ecommerce-image-designer/ "--output=$ZipPath" $SkillTree
 if ($LASTEXITCODE -ne 0) { throw '固定快照打包失败' }
 Expand-Archive -LiteralPath $ZipPath -DestinationPath $StageDir -ErrorAction Stop
 $PackagedSkill = Join-Path $StageDir 'ecommerce-image-designer'
@@ -107,7 +107,7 @@ Copy-Item -LiteralPath (Join-Path $SourceRepo 'MANUAL.md') -Destination (Join-Pa
 Write-Output $ReleaseDir
 ```
 
-使用 `git archive` 而非当前工作树，避免把未提交改动、配置和临时证据装进去。该提交的 `.gitattributes` 保留技能与补丁字节；不要用编辑器重新保存包内文件后仍沿用旧摘要。
+使用 `git archive` 而非当前工作树，避免把未提交改动、配置和临时证据装进去。对子树对象归档时，仓库根目录的 `.gitattributes` 不在归档范围内；命令级 `-c core.autocrlf=false` 防止本机自动换行设置改变文件字节，不修改 Git 配置。不要省略该选项，也不要用编辑器重新保存包内文件后仍沿用旧摘要。正式发布另将包内全部文件与目标 Git 对象逐字节核对。
 
 把 ZIP 的 SHA256、完整提交 SHA 和已知限制随版本通知通过团队可信渠道提供。清单校验用于发现内容变化，不能单独证明发送者可信。当前没有现成的插件发行清单或市场安装包；官方推荐的可安装插件分发属于后续工程，不是把本 ZIP 改扩展名即可实现。[官方分发说明](https://learn.chatgpt.com/docs/build-skills#distribute-skills-with-plugins)
 

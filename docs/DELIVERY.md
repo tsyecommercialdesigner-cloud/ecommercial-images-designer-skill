@@ -4,7 +4,9 @@
 
 用户接受76d.8.1的Sol显式状态上游overload未完成例外并授权关闭。原稿失败和候选成绩分别保留，见[自动编排报告](DSH-ORCHESTRATION-76d81.md)。本次从dev走PR→Windows CI与准确head上的Agent review→保留历史的merge commit→main合入CI，再沿用既有授权受控快进同步dev及其CI。评审仍为维护者Agent审查，不冒充独立人工批准；未改变分支保护或使用管理员绕过。实际SHA和运行结果完成后记录，不以准备阶段代替远端成功。
 
-共用check.ps1新增离线Node门禁；Actions固定setup-node v4完整SHA及Node24.21.0，解释器由已准备的uv环境提供，不依赖开发机.venv。该步骤不会连接Desktop、模型或MCP，也不修改用户安装配置。SSH fetch本次报publickey拒绝；使用既有gh凭据辅助器通过显式HTTPS地址fetch/push，不修改origin URL、SSH密钥或全局Git配置。
+共用check.ps1新增离线Node门禁，核对runner既有Node22+并记录实际版本，Python解释器由已准备的uv环境提供，不依赖开发机.venv。该步骤不会连接Desktop、模型或MCP，也不修改用户安装配置。SSH fetch本次报publickey拒绝；使用既有gh凭据辅助器通过显式HTTPS地址fetch/push，不修改origin URL、SSH密钥或全局Git配置。
+
+首次提交1794cef包含可选setup-node步骤，HTTPS推送被GitHub拒绝：现有OAuth凭据没有workflow scope。保留该提交和失败记录，以后续修复提交撤回工作流编辑，沿用既有Windows CI对check.ps1的调用；Node测试仍是必需检查的一部分，不跳过。不会提升令牌权限、修改分支保护或强推。远端实际执行的Node版本以CI日志为准，不宣称工作流仍固定24.21.0。
 
 本机core.autocrlf=true会使新签入的LF验证器／补丁和历史CRLF技能正文在规范化／重新检出后改变字节摘要。新增.gitattributes对已评测技能包和统一diff补丁禁用换行转换，保留原字节；保留正文空白检查，补丁仅豁免合法上下文空白行。暂存后逐文件核对Git blob和实际评测包，不把换行规范化造成的摘要变化误称作功能修复。
 

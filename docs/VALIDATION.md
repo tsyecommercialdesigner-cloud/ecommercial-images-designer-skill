@@ -1,6 +1,6 @@
 # 本地验证与覆盖边界
 
-76d.8.1已由用户接受overload覆盖例外后关闭，原失败及评分保持不变。交付检查入口scripts/check.ps1现同时运行Python和离线Node测试；Node22+、标准库，无npm依赖，Windows CI固定24.21.0。DSH_TEST_PYTHON仅在检查子进程期间指向uv既有环境并恢复原值，不运行真实宿主或收费出图。
+76d.8.1已由用户接受overload覆盖例外后关闭，原失败及评分保持不变。交付检查入口scripts/check.ps1现同时运行Python和离线Node测试；Node22+、标准库，无npm依赖，Windows CI使用runner现有Node并在日志记录实际版本。DSH_TEST_PYTHON仅在检查子进程期间指向uv既有环境并恢复原值，不运行真实宿主或收费出图。新增setup-node的准备方案因OAuth缺workflow scope而撤回，历史拒绝及修复提交保留。
 
 后续已接入[测试宿主自动后处理](DSH-ORCHESTRATION-76d81.md)：八项尝试、七项正常结束，Sol显式状态上游overload未重试；原稿5项通过，五个正向候选5/5通过、两个反例不编译。独立审计分别保留原稿及候选，不宣称8/8。109 Python、15 Node及结构／42格式检查通过，既有安装配置和门禁未改。
 

@@ -39,11 +39,6 @@ jobs:
         run: |
           uv sync --locked --group dev
           if ($LASTEXITCODE -ne 0) { throw 'Locked dependency preparation failed' }
-      - name: Set up Node for offline Desktop orchestration tests
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: "24.21.0"
-          check-latest: false
       - name: Check package, scenarios and mock protocol
         shell: pwsh
         run: ./scripts/check.ps1

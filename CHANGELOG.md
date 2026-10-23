@@ -1,5 +1,9 @@
 # 修复历史与摘要变化
 
+## 2026-10-23 — PR #3合入及同步复验完成
+
+head1039530的Windows CI和准确head Agent review成功后正常merge为edab264，main合入CI及dev快进同步CI均成功，四端refs一致且工作区干净。三个新增提交及先前拒绝／修复历史保留，无强推或管理员绕过。109 Python、15 Node检查进入托管Windows CI；76d.8.1按用户接受overload例外关闭，原稿与候选成绩不改判。精确SHA、运行链接和审查证据见[固定交付回执](docs/DELIVERY.md#2026-10-23pr-3主修复交付完成)。该回执与Beads交付关闭记录另走仅文档PR，不把旧运行冒充后续提交通过。
+
 ## 2026-10-23 — 接受overload例外并准备交付
 
 用户明确接受Sol显式状态上游overload覆盖例外，关闭76d.8.1；原稿5/7、正向候选5/5、两个反例及全部失败记录不改判。交付包含累计76d沙箱诊断、隔离缓存补丁、CLI／Desktop免费复验与状态编排源码，原历史摘要保留。共用check.ps1加入15项离线Node检查，并把既有Python路径传给子进程测试，避免CI依赖本机.venv；Windows CI固定Node24.21.0及setup-node完整SHA。此阶段尚未声称新PR或合入CI成功，结果另写交付回执，无新增模型或收费调用。

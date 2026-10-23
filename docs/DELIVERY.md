@@ -10,6 +10,23 @@
 
 本机core.autocrlf=true会使新签入的LF验证器／补丁和历史CRLF技能正文在规范化／重新检出后改变字节摘要。新增.gitattributes对已评测技能包和统一diff补丁禁用换行转换，保留原字节；保留正文空白检查，补丁仅豁免合法上下文空白行。暂存后逐文件核对Git blob和实际评测包，不把换行规范化造成的摘要变化误称作功能修复。
 
+## 2026-10-23：PR #3主修复交付完成
+
+[PR #3](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/pull/3)已正常merge，未使用管理员绕过。三个新增提交1794cef、6e36ddc、1039530和原有main历史均保留；前者被拒绝的推送及后续修复没有squash或改写。
+
+| 阶段 | 准确SHA | Windows CI证据 |
+|---|---|---|
+| dev推送 | `103953059ef04eb6a4ed4904b938c1fe814dee32` | [39922530388](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/39922530388)，push/dev，success |
+| PR待合入head | `103953059ef04eb6a4ed4904b938c1fe814dee32` | [39922534336](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/39922534336)，pull_request，success |
+| main实际合入 | `edab26414ceca70ad25fb7ff7acd447da296b3af` | [39923275158](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/39923275158)，push/main，success |
+| dev快进同步 | `edab26414ceca70ad25fb7ff7acd447da296b3af` | [39923418212](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/39923418212)，push/dev，success |
+
+[Agent审查](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/pull/3#pullrequestreview-5625616924)绑定上述head，Agent review状态成功；两项必需门禁成功、mergeStateStatus=CLEAN后才合并。这是维护者Agent审查，不是独立人工APPROVE。main合入CI通过后才执行祖先核对和ff-only，本地main/dev及origin/main/dev已核实同为edab264，工作区干净。
+
+托管Windows CI运行109项Python与15项Node检查，未调用真实模型或MCP；真实Host验证仍使用原独立证据，用户接受的Sol overload未评测项没有改判。已核对main检出的十一文件技能包与实际评测快照逐字节一致，Git归档及补丁摘要一致。checkout v4有Node20弃用提示，runner强制以Node24执行且任务成功；测试Node运行时另按check.ps1核对，不因此更换Action或放宽检查。
+
+此表是PR #3的固定回执。交付跟踪Beads ycn在上述源代码／合后／同步CI均完成后关闭；其关闭记录和本文另用仅文档PR补交，仍需完整CI／准确head审查／merge及同步复验，最终refs以该回执PR的实际结果为准，不把源代码PR的CI替代后续提交。
+
 工作流为 [windows-ci.yml](../.github/workflows/windows-ci.yml)，检查名为 `Windows CI`。它覆盖目标main的PR、main/dev推送及手动运行；没有路径过滤，因此dev快进推送也会触发检查。Windows 2025中使用uv 0.12.9、Python 3.12.14和锁定开发依赖；Actions固定到完整SHA，凭据不保留，权限仅contents:read，不使用供应商密钥。
 
 依赖准备完成后，本地与CI共用 [check.ps1](../scripts/check.ps1)。它遇到结构／场景校验或单元测试失败即失败，不调用模型行为评测、真实MCP或收费出图。已有42场景模型评测的证据单独保留，不用CI的单元测试冒充模型实跑。

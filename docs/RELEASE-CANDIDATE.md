@@ -1,6 +1,6 @@
 # 团队手册交付与 Release 候选回执
 
-核对日期：2026-10-23。公开 Release 尚未发布，远端尚无发行标签。当前仅准备了可审阅的 [Release 草稿](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/untagged-e0d507652d9b070484cd)，候选标识为 `candidate-f4d78a8`，不是从开发检查项目版本推定的正式 Skill 语义版本。
+以下保留2026-10-23发布前的候选记录：当时没有公开Release或发行标签，候选标识为`candidate-f4d78a8`。该候选后来在严格源码字节核对时失败，经PR #7修复后，同一个Release已正式发布为[v0.1.0](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.0)。原候选摘要和阶段验证不改写；正式源码、修复后的摘要及发布状态见[正式发布回执](RELEASE-v0.1.0.md)，不能使用下文旧ZIP摘要接收正式包。
 
 ## 源码交付
 

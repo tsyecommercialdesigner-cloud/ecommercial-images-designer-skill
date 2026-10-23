@@ -6,6 +6,8 @@
 
 团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
 
+正式版本：[v0.1.0](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.0)。使用 Release 附件中的完整技能包、手册及摘要清单；准确提交、打包修复和已知限制见[发布回执](docs/RELEASE-v0.1.0.md)。
+
 ## 使用
 
 在此仓库中使用支持本地 Skills 的宿主，显式调用示例：

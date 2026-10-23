@@ -10,7 +10,7 @@
 
 技能名称为 `ecommerce-image-designer`，目录为 `.agents/skills/ecommerce-image-designer/`，该目录包含独立运行所需的全部指令参考资料和 MIT 许可证。它不包含图像服务的安装程序或凭据。
 
-当前团队分发采用已合入并通过Windows CI的固定快照`0be00e0b8837e9f06633ce5b7504f14bfa711992`，没有发行标签或已发布安装包承诺。本次MANUAL属于该快照之后新增的文档，不能声称历史提交已包含它。分支交付见[交付记录](DELIVERY.md)，各宿主历史与当前包覆盖边界在[手册版本表](../MANUAL.md#已验证与仍需验收的范围)分别记录；跨平台安装与收费出图尚未验证。
+当前团队分发采用[v0.1.0正式版](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.0)，发行源码为`68be9e2030605454bc30026b96c6957635c76a91`，运行快照仍为`0be00e0b8837e9f06633ce5b7504f14bfa711992`；本版已修复子树归档换行转换并核对全部Git字节。MANUAL属于运行快照之后新增的文档，不能声称0be00e0已包含它。摘要与发布验收见[发布回执](RELEASE-v0.1.0.md)，各宿主覆盖边界见[手册版本表](../MANUAL.md#已验证与仍需验收的范围)；正式发布不代表跨平台安装与收费出图已验证。
 
 ## Codex 中发现
 

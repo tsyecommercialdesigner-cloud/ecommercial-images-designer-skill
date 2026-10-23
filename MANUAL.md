@@ -4,6 +4,8 @@
 
 团队当前可以分发**固定提交的完整 Skill 目录**，让成员安装到业务项目的 `.agents/skills/ecommerce-image-designer/`。只策划时不必部署图像服务；实际出图前，由管理员准备指定 MCP，使用者确认具体方案和本次收费范围。
 
+**普通成员从第 4 节开始：下载正式 Release → 校验 → 安装 → 在宿主中加载。不要执行第 3 节的维护者打包命令。** 只有负责制作／发布技能包的人才需要第 3、10 节；配置图像服务的人看第 5 节。成员不需要克隆源码或自行打包。
+
 ## 1. 版本与能力边界
 
 | 项目 | 本手册采用的实际值 |
@@ -13,10 +15,10 @@
 | 技能名称 | `ecommerce-image-designer`；界面显示名“电商图片设计” |
 | 源码中的技能根 | `.agents/skills/ecommerce-image-designer/` |
 | 分发类型 | 单技能目录；MIT 许可证；不是现成的安装器或插件 |
-| 版本标签／Release | [v0.1.0 正式版](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.0)，发行源码 `68be9e2030605454bc30026b96c6957635c76a91`；运行快照仍为上行固定 SHA，详见[发布回执](docs/RELEASE-v0.1.0.md) |
+| 版本标签／Release | [v0.1.1](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.1)，完整发行源码 SHA 见同版 `release.json` 的 `source_commit`；运行快照仍为上行固定 SHA。历史 [v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)保留 |
 | 指定出图服务 | `zhenzhen-gptimagegen2.5-mcp`、`zhenzhen-nanobanana-mcp`，按任务选择其中一个 |
 
-本手册是该技能快照之后新增的使用文档，**不在上述历史快照提交中**；维护者按下文单独附入交付目录。v0.1.0 的 `release.json` 分开记录正式源码与运行快照，发行手册含当次发行注记。本仓库手册会继续更新，既有标签和附件不随之改写；新版本应重新固定源码／运行快照及清单，不能让成员日常自动跟随 `main` 或 `dev`。
+本手册是该技能快照之后新增的使用文档，**不在上述历史快照提交中**；维护者按下文单独附入交付目录。正式 Release 的 `release.json` 分开记录正式源码与运行快照，发行手册含当次发行注记。本仓库手册会继续更新，既有标签和附件不随之改写；新版本应重新固定源码／运行快照及清单，不能让成员日常自动跟随 `main` 或 `dev`。
 
 能力包括选题、卖点分析、文案排版、提示词、确认后提交 MCP、取得图片和按反馈回退。主图、详情页、SKU 图及用户明确要求的电商文生图素材适用；无电商用途的通用插画、视频和店铺运营不适用。来源文章里的宠物烘干箱参数只属于案例，不能迁入其他商品。
 
@@ -36,8 +38,8 @@
 
 | 角色 | 负责事项 |
 |---|---|
-| 维护者 | 选择固定提交，打包、核对清单和摘要；提供手册、版本说明及已知限制；管理升级。 |
-| 使用者 | 安装完整目录，确认宿主发现正确来源；提供商品和图片事实，审阅方案、批准范围，验收产物。 |
+| 维护者 | 选择固定提交，制作并发布包、核对清单和摘要；提供手册、版本说明及已知限制；管理升级。团队日常优先使用同一个正式 Release。 |
+| 普通成员／使用者 | 从第 4 节下载正式包、校验和安装；不执行维护者打包命令。确认宿主发现正确来源，再提供商品和图片事实、审阅方案、批准范围及验收产物。 |
 | MCP 管理员 | 按服务自身交付说明配置程序或服务、凭据、网络、费用与文件访问；提供本宿主连接说明和免费查询结果。 |
 
 **运行包只包含以下 11 个文件**，不要只发 `SKILL.md`：
@@ -64,6 +66,8 @@ ecommerce-image-designer/
 普通成员使用指令和审阅方案不需要安装 Git、uv、Node、Beads 或 Rust。维护者从 Git 打包时需要 Git；开发检查另需 Python 3.12+、uv 和 Node 22+，详见[验证说明](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/VALIDATION.md)。`tests/`、`evals/`、宿主测试编排器和 `patches/` 不属于普通成员的运行包；不要分发 `.beads`、缓存、凭据、客户图片或原始会话。
 
 ## 3. 维护者：按固定提交制作分发包
+
+**本节仅供维护者。普通成员请跳到第 4 节。** 本地打包用于维护、测试或明确的定制交付；向团队分发时优先原样转发正式 Release 的附件，保持同一版本与摘要。不要把本地 ZIP 与正式 Release 的 `release.json`／摘要混放。
 
 在已经取得上述仓库、并具有所需访问权的**源码根目录**执行以下 PowerShell。获取仓库时可使用其 HTTPS 地址；若需登录，使用既有 Git 凭据机制，不把令牌写入 URL。
 
@@ -113,63 +117,167 @@ Write-Output $ReleaseDir
 
 ## 4. 成员：校验并安装
 
-### 4.1 校验收到的文件
+### 4.1 下载正式 Release，准备交付目录
 
-取得上述四个交付文件后，在普通权限 PowerShell 7 中执行。按提示输入交付目录，并将通知中的 ZIP SHA256 粘贴到第二个提示中；不得输入密钥。此步骤只解压到全新临时目录，不覆盖现有技能。
+1. 用浏览器打开 [v0.1.1 正式 Release](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.1)，在页面下方展开 **Assets**。仓库为公开仓库，普通成员无需 Git 或克隆源码。
+2. 新建一个专门接收本版附件的文件夹。下面以 `D:\Downloads\电商图片设计-v0.1.1` 为例；成员可选择自己电脑上实际存在的其他盘符和位置。
+3. 将以下四个文件下载到该文件夹，不要先解压 ZIP：
+
+| 必需文件 | 下载入口／作用 |
+|---|---|
+| `ecommerce-image-designer-0be00e0.zip` | [技能运行包](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.1/ecommerce-image-designer-0be00e0.zip)，包含完整十一文件 |
+| `release.json` | [版本与文件清单](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.1/release.json) |
+| `SHA256SUMS.txt` | [附件摘要清单](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.1/SHA256SUMS.txt) |
+| `MANUAL.md` | [本版随包手册](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.1/MANUAL.md) |
+
+另外建议下载同一 Assets 中的 `CHANGELOG.md`、`RELEASE-NOTES.md`、`VALIDATION.json`，了解变更、限制和验证证据。**不要选择 `Source code (zip)` 或 `Source code (tar.gz)`；它们是源码归档，不是本流程使用的技能运行包。** 维护者也可把同一 Release 的附件原样放到团队共享盘，成员整套领取。
+
+下载的 `MANUAL.md` 是 v0.1.1 冻结的修正版手册。请按其中第4.2、4.3节完整代码块执行；不要切回 v0.1.0 随包旧手册的逐行流程。
+
+正确的“交付目录”是**直接装着这些文件的文件夹**：
+
+```text
+D:\Downloads\电商图片设计-v0.1.1\
+├── ecommerce-image-designer-0be00e0.zip
+├── release.json
+├── SHA256SUMS.txt
+└── MANUAL.md
+```
+
+它是下载附件的位置；后续安装时会另外选择业务项目。空文件夹、ZIP 解压后的 `ecommerce-image-designer` 文件夹都不能作为交付目录。若维护者提供的是本地打包结果，应选择其 `delivery` 子目录，旁边的 `staging` 不用于成员验证。
+
+在资源管理器打开这个文件夹，按 **Ctrl+L** 选中地址栏，按 **Ctrl+C** 复制完整路径。粘贴到提示中可以带英文双引号，例如 `"D:\Downloads\电商图片设计-v0.1.1"`；下面的命令会自动去掉双引号和首尾空白，保留路径内部空格。
+
+### 4.2 填写摘要并一次完成验证
+
+打开普通权限 **PowerShell 7**。不要复制示例中的 `PS C:\...>` 或 `>>` 提示符。下面整个代码块要从 `. {` 到最后的 `}` 一次复制执行；出现 `>>` 代表 PowerShell 还在等待代码块结束，不是让你跳过报错继续执行。
+
+两个输入分别是：
+
+| 提示 | 应输入的内容 |
+|---|---|
+| 交付目录 | 上一节四文件所在目录的完整路径；不是 ZIP 文件路径，也不是准备安装技能的业务项目目录 |
+| ZIP SHA256 | 这一份 ZIP 在可信 Release 通知或维护者通知中的64位摘要；只填摘要，不带文件名、`sha256:`、引号或 Git 提交号 |
+
+**从上面 v0.1.1 正式入口下载的 ZIP，填写下列值：**
+
+```text
+4bf32b888a67392036af80e3d9ab2405d818686651218179f477fb671426e8d6
+```
+
+维护者自行重新打包的 ZIP 即使运行文件相同，归档摘要也可能不同，必须用维护者对**那份本地包**给出的摘要。不能混用两份包的 ZIP、清单和摘要，也不要自行计算一个值再当作可信发布通知。无需输入任何 API 密钥。
+
+下面会先检查目录和必需文件，再询问摘要；仅在 ZIP、清单及十一文件全部通过后打印成功。验证直接读取 ZIP，不创建临时解压目录，不覆盖技能。**任一步失败都会终止本块并清空旧验证结果；不要单独执行最后的成功提示。** 修正问题后重新执行完整验证块。
+
+v0.1.1 附件中的手册包含本次修复。技能运行文件没有变化，沿用 v0.1.0 的原始 ZIP，故压缩包名称和摘要相同；`release.json` 和手册应从 v0.1.1 一起下载。v0.1.0 标签和附件保留历史版本，不覆盖更新。
 
 ```powershell
 # MANUAL:VERIFY
-$ErrorActionPreference = 'Stop'
-$DeliveryDir = (Get-Item -LiteralPath (Read-Host '输入交付目录的完整路径')).FullName
-$ExpectedZipSha = (Read-Host '输入维护者通知中的ZIP SHA256').Trim().ToLowerInvariant()
-if ($ExpectedZipSha -notmatch '^[0-9a-f]{64}$') { throw 'SHA256应为64位十六进制' }
-$Release = Get-Content -Raw -LiteralPath (Join-Path $DeliveryDir 'release.json') | ConvertFrom-Json
-if ($Release.skill -ne 'ecommerce-image-designer' -or $Release.revision -ne '0be00e0b8837e9f06633ce5b7504f14bfa711992') {
-    throw '技能名称或固定版本不符'
+. {
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    $VerifiedDelivery = $null
+    $Release = $null
+    $PayloadRoot = $null
+    $ErrorActionPreference = 'Stop'
+    try {
+        $DeliveryInput = (Read-Host '输入交付目录的完整路径（可带双引号）').Replace('"', '').Trim()
+        if (![IO.Path]::IsPathFullyQualified($DeliveryInput) -or !(Test-Path -LiteralPath $DeliveryInput -PathType Container)) { throw '交付目录不存在；请复制四个附件所在文件夹的完整路径' }
+        $DeliveryDir = (Get-Item -LiteralPath $DeliveryInput).FullName
+        foreach ($RequiredFile in @('release.json','SHA256SUMS.txt','MANUAL.md')) {
+            if (!(Test-Path -LiteralPath (Join-Path $DeliveryDir $RequiredFile) -PathType Leaf)) { throw "交付目录缺少 $RequiredFile；请下载同一Release的四个必需文件，勿选择空目录或解压目录" }
+        }
+        $Release = Get-Content -Raw -LiteralPath (Join-Path $DeliveryDir 'release.json') | ConvertFrom-Json
+        if ($Release.skill -ne 'ecommerce-image-designer' -or $Release.revision -ne '0be00e0b8837e9f06633ce5b7504f14bfa711992') { throw '技能名称或固定版本不符' }
+        if ([string]::IsNullOrWhiteSpace($Release.archive) -or $Release.archive -match '[/\\:]' -or [IO.Path]::GetFileName($Release.archive) -cne $Release.archive) { throw '清单中的压缩包名称非法' }
+        $ReceivedZip = Join-Path $DeliveryDir $Release.archive
+        if (!(Test-Path -LiteralPath $ReceivedZip -PathType Leaf)) { throw "缺少技能ZIP：$($Release.archive)；请下载后再验证，不要先解压" }
+        $ExpectedZipSha = (Read-Host '输入这份ZIP的通知摘要（仅64位SHA256）').Trim().ToLowerInvariant()
+        if ($ExpectedZipSha -notmatch '^[0-9a-f]{64}$') { throw 'SHA256应为64位十六进制，不带文件名、引号或sha256前缀' }
+        $ActualZipSha = (Get-FileHash -LiteralPath $ReceivedZip -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($ActualZipSha -ne $ExpectedZipSha -or $ActualZipSha -ne $Release.archive_sha256) { throw '压缩包摘要不符，停止安装；检查是否混用了本地包和正式Release' }
+        if (@($Release.files).Count -ne 11) { throw '文件清单应恰好有11项' }
+        $FilePaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+        foreach ($Entry in $Release.files) {
+            if ([string]::IsNullOrWhiteSpace($Entry.path) -or $Entry.path -match '(^/|\\|:|(^|/)\.\.?(/|$))' -or $Entry.path.EndsWith('/') -or $Entry.sha256 -notmatch '^[0-9a-f]{64}$') { throw '清单路径或文件摘要非法' }
+            if (!$FilePaths.Add($Entry.path)) { throw '清单包含重复路径' }
+        }
+        $Zip = [IO.Compression.ZipFile]::OpenRead($ReceivedZip)
+        try {
+            $Seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+            $ZipFiles = @($Zip.Entries | Where-Object { !$_.FullName.EndsWith('/') })
+            if ($ZipFiles.Count -ne 11) { throw 'ZIP文件数量不符；可能下载了Source code或混入额外文件' }
+            foreach ($ZipEntry in $Zip.Entries) {
+                if (!$Seen.Add($ZipEntry.FullName) -or !$ZipEntry.FullName.StartsWith('ecommerce-image-designer/', [StringComparison]::Ordinal) -or $ZipEntry.FullName -match '(\\|:|(^|/)\.\.?(/|$))' -or (($ZipEntry.ExternalAttributes -shr 16) -band 0xF000) -eq 0xA000) { throw 'ZIP目录结构、重复路径或链接非法' }
+            }
+            foreach ($Entry in $Release.files) {
+                $ZipEntry = $Zip.GetEntry('ecommerce-image-designer/' + $Entry.path)
+                if ($null -eq $ZipEntry) { throw "ZIP缺少文件：$($Entry.path)" }
+                $Stream = $ZipEntry.Open()
+                $Hasher = [Security.Cryptography.SHA256]::Create()
+                try { $FileSha = [BitConverter]::ToString($Hasher.ComputeHash($Stream)).Replace('-', '').ToLowerInvariant() }
+                finally { $Stream.Dispose(); $Hasher.Dispose() }
+                if ($FileSha -ne $Entry.sha256) { throw "文件摘要不符：$($Entry.path)" }
+            }
+        } finally { $Zip.Dispose() }
+        $VerifiedDelivery = [pscustomobject]@{ Verified=$true; ArchivePath=$ReceivedZip; ArchiveSha256=$ActualZipSha; Manifest=$Release }
+        Write-Output '交付内容校验通过；可以继续安装，尚未证明宿主发现或业务出图成功。'
+    } catch {
+        $VerifiedDelivery = $null
+        $Release = $null
+        throw
+    } finally { $ErrorActionPreference = $PreviousErrorActionPreference }
 }
-if ([IO.Path]::GetFileName($Release.archive) -cne $Release.archive) { throw '清单中的压缩包名称非法' }
-$ReceivedZip = Join-Path $DeliveryDir $Release.archive
-$ActualZipSha = (Get-FileHash -LiteralPath $ReceivedZip -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($ActualZipSha -ne $ExpectedZipSha -or $ActualZipSha -ne $Release.archive_sha256) { throw '压缩包摘要不符，停止安装' }
-$ExtractDir = Join-Path ([IO.Path]::GetTempPath()) ('ecommerce-verify-' + [guid]::NewGuid().ToString('N'))
-Expand-Archive -LiteralPath $ReceivedZip -DestinationPath $ExtractDir -ErrorAction Stop
-$PayloadRoot = [IO.Path]::GetFullPath((Join-Path $ExtractDir 'ecommerce-image-designer'))
-$ActualFiles = @(Get-ChildItem -LiteralPath $PayloadRoot -File -Recurse)
-if ($ActualFiles.Count -ne 11 -or @($Release.files).Count -ne 11) { throw '文件清单不完整或有额外文件' }
-if (@($Release.files.path | Sort-Object -Unique).Count -ne 11) { throw '清单包含重复路径' }
-foreach ($Entry in $Release.files) {
-    $FilePath = [IO.Path]::GetFullPath((Join-Path $PayloadRoot $Entry.path))
-    if (!$FilePath.StartsWith($PayloadRoot + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw '清单路径越界' }
-    if ((Get-FileHash -LiteralPath $FilePath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Entry.sha256) { throw "文件摘要不符：$($Entry.path)" }
-}
-Write-Output '交付内容校验通过；尚未证明宿主已发现或业务出图成功。'
 ```
 
-### 4.2 推荐：安装到业务项目
+只有完整代码块正常结束并打印上述成功提示，才继续下一步。报错后旧的验证结果已失效，重新运行本块；重新打开窗口也必须重新验证。不要复制单独的 `Write-Output` 行当作验证。
 
-在同一个 PowerShell 窗口继续执行。输入**实际开展策划工作的既有项目目录**。不要把整个开发仓库、它的 AGENTS.md、Beads 或沙箱修复脚本复制到业务项目。
+### 4.3 推荐：安装到业务项目
+
+在**验证成功的同一个 PowerShell 窗口**，一次执行下面完整代码块。输入实际开展策划工作的既有项目目录，例如 `D:\工作项目\收纳盒主图`，可带双引号；它与交付目录是两个位置。命令只创建该项目下的 `.agents/skills/ecommerce-image-designer/`，不会把整个开发仓库、AGENTS.md、Beads 或沙箱修复脚本复制过去。
 
 ```powershell
 # MANUAL:INSTALL
-$ProjectRoot = (Get-Item -LiteralPath (Read-Host '输入业务项目目录的完整路径')).FullName
-if (!(Test-Path -LiteralPath $ProjectRoot -PathType Container)) { throw '项目目录不存在' }
-$SkillsParent = Join-Path $ProjectRoot '.agents/skills'
-$InstalledSkill = Join-Path $SkillsParent 'ecommerce-image-designer'
-if (Test-Path -LiteralPath $InstalledSkill) { throw '存在同名技能；先按升级章节比较并备份，不覆盖' }
-foreach ($ParentDir in @((Join-Path $ProjectRoot '.agents'),$SkillsParent)) {
-    if ((Test-Path -LiteralPath $ParentDir) -and ((Get-Item -LiteralPath $ParentDir).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw '安装父目录为链接／联接，交维护者核对，不写入' }
+. {
+    $PreviousErrorActionPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Stop'
+    try {
+        if (!(Test-Path variable:VerifiedDelivery) -or $null -eq $VerifiedDelivery -or $VerifiedDelivery.Verified -ne $true) { throw '尚未完成本轮验证；请先重新执行整个MANUAL:VERIFY块' }
+        if ((Get-FileHash -LiteralPath $VerifiedDelivery.ArchivePath -Algorithm SHA256).Hash.ToLowerInvariant() -ne $VerifiedDelivery.ArchiveSha256) { $VerifiedDelivery = $null; throw 'ZIP在验证后被更改；请重新验证' }
+        $ProjectInput = (Read-Host '输入业务项目目录的完整路径（可带双引号）').Replace('"', '').Trim()
+        if (![IO.Path]::IsPathFullyQualified($ProjectInput) -or !(Test-Path -LiteralPath $ProjectInput -PathType Container)) { throw '业务项目目录不存在；请先建好实际工作目录' }
+        $ProjectRoot = (Get-Item -LiteralPath $ProjectInput).FullName
+        $SkillsParent = Join-Path $ProjectRoot '.agents/skills'
+        $InstalledSkill = Join-Path $SkillsParent 'ecommerce-image-designer'
+        if (Test-Path -LiteralPath $InstalledSkill) { throw '存在同名技能；先按升级章节比较并备份，不覆盖' }
+        foreach ($ParentDir in @($ProjectRoot,(Join-Path $ProjectRoot '.agents'),$SkillsParent)) {
+            if ((Test-Path -LiteralPath $ParentDir) -and ((Get-Item -LiteralPath $ParentDir).Attributes -band [IO.FileAttributes]::ReparsePoint)) { throw '安装父目录为链接／联接，交维护者核对，不写入' }
+        }
+        $Zip = [IO.Compression.ZipFile]::OpenRead($VerifiedDelivery.ArchivePath)
+        try {
+            New-Item -ItemType Directory -Path $SkillsParent -Force -ErrorAction Stop | Out-Null
+            New-Item -ItemType Directory -Path $InstalledSkill -ErrorAction Stop | Out-Null
+            foreach ($Entry in $VerifiedDelivery.Manifest.files) {
+                $Target = [IO.Path]::GetFullPath((Join-Path $InstalledSkill $Entry.path))
+                if (!$Target.StartsWith($InstalledSkill + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase)) { throw '安装路径越界' }
+                New-Item -ItemType Directory -Path ([IO.Path]::GetDirectoryName($Target)) -Force -ErrorAction Stop | Out-Null
+                $InputStream = $Zip.GetEntry('ecommerce-image-designer/' + $Entry.path).Open()
+                try {
+                    $OutputStream = [IO.File]::Open($Target, [IO.FileMode]::CreateNew, [IO.FileAccess]::Write)
+                    try { $InputStream.CopyTo($OutputStream) } finally { $OutputStream.Dispose() }
+                } finally { $InputStream.Dispose() }
+            }
+        } finally { $Zip.Dispose() }
+        foreach ($Entry in $VerifiedDelivery.Manifest.files) {
+            if ((Get-FileHash -LiteralPath (Join-Path $InstalledSkill $Entry.path) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Entry.sha256) { throw "安装后摘要不符：$($Entry.path)" }
+        }
+        Write-Output "已安装：$InstalledSkill"
+    } finally { $ErrorActionPreference = $PreviousErrorActionPreference }
 }
-New-Item -ItemType Directory -Path $SkillsParent -Force -ErrorAction Stop | Out-Null
-Copy-Item -LiteralPath $PayloadRoot -Destination $InstalledSkill -Recurse -ErrorAction Stop
-foreach ($Entry in $Release.files) {
-    if ((Get-FileHash -LiteralPath (Join-Path $InstalledSkill $Entry.path) -Algorithm SHA256).Hash.ToLowerInvariant() -ne $Entry.sha256) { throw "安装后摘要不符：$($Entry.path)" }
-}
-Write-Output "已安装：$InstalledSkill"
 ```
 
-保留收到的 `release.json`、摘要通知和安装路径，用于后续比较。若团队把业务项目纳入 Git，可由维护者将这一个技能目录按该项目流程提交；成员不必各自手改正文。
+命令从已验证 ZIP 直接写入新安装目录，不遗留临时解压副本。若安装中途因权限／磁盘等问题失败，可能留下本次的部分安装目录；不要继续加载或强行覆盖，保留错误和路径交维护者处理。保留收到的 `release.json`、摘要通知和安装路径，用于后续比较。若业务项目纳入 Git，可由维护者按该项目流程提交这一个技能目录。
 
-### 4.3 在宿主中加载
+### 4.4 在宿主中加载
 
 **Codex CLI／Desktop：** CLI 从该项目目录启动；Desktop 在该项目目录创建或打开任务。在技能列表中选择 `ecommerce-image-designer`，核对来源为刚安装的 `SKILL.md`，然后发第 6 节的请求。没有更新时先新建会话，再按宿主方式刷新或重启。两种界面都必须核对实际来源，不能以复制成功代替发现。
 
@@ -268,7 +376,7 @@ M01 已接受，保持不变；M02 的标题区太挤，只调整 M02 的局部�
 在已安装 Python 3.10+、已有 `state.json` 和独立 `evidence.json` 的业务任务目录中，可以运行以下命令。`$InstalledSkill` 取第 4 节安装路径，`$TaskDir` 改成实际任务目录；执行前确认 `python --version`。此处不自动安装依赖。
 
 ```powershell
-$TaskDir = (Get-Item -LiteralPath (Read-Host '输入已有状态和证据文件的任务目录')).FullName
+$TaskDir = (Get-Item -LiteralPath ((Read-Host '输入已有状态和证据文件的任务目录（可带双引号）').Replace('"', '').Trim())).FullName
 python --version
 python -X utf8 -B (Join-Path $InstalledSkill 'scripts/validate_design_state.py') (Join-Path $TaskDir 'state.json') --evidence (Join-Path $TaskDir 'evidence.json') --render
 if ($LASTEXITCODE -ne 0) { throw '原稿校验失败；保留错误，不提交绘图' }
@@ -309,7 +417,7 @@ Move-Item -LiteralPath $ExpectedInstall -Destination $BackupDir -ErrorAction Sto
 Write-Output "备份已保留：$BackupDir"
 ```
 
-- **升级：** 从新包校验后得到的新 `$PayloadRoot` 再执行安装块，目标必须为空。完成免费验收，旧备份保留。
+- **升级：** 新包完整验证成功、获得新的 `$VerifiedDelivery` 后再执行安装块，目标必须为空。完成免费验收，旧备份保留。
 - **回滚：** 先把不接受的新版本按同样方式移到另一新备份目录，再从已核对的旧备份复制到空的安装位置，按旧清单校验，刷新宿主并复验。不要仅退 `SKILL.md` 而保留新资源；旧版能否读取新版状态需单独核对，不改写旧业务档案来假装兼容。
 - **卸载：** 移出发现目录后刷新／新开会话，确认该来源已不在技能列表；若仍出现，检查其他作用域的同名副本。不要只在 `.agents/skills` 内把文件夹改名，它仍可能被扫描。备份可按团队保留制度后续处理，本手册不递归删除用户数据。
 
@@ -317,6 +425,10 @@ Write-Output "备份已保留：$BackupDir"
 
 | 现象 | 下一步 |
 |---|---|
+| `release.json` 找不到 | 交付目录应直接包含四个附件；不要选空目录、解压目录或业务项目。回到第4.1节重新下载并复制地址栏路径。 |
+| 报错后又看到“校验通过” | 检查是否在使用旧手册逐行执行或单独打印成功文字；它不能证明通过。用本页完整验证块重跑，失败会清空结果，安装块会拒绝继续。 |
+| ZIP 摘要不符 | 区分正式包与维护者本地包；核对通知摘要与文件来源，不混放清单，不删除摘要检查来继续安装。 |
+| 路径提示带双引号 | 本页所有目录输入会自动移除英文双引号并修剪首尾空白；内部空格保留。输入的是实际目录，不带`PS C:\...>`等提示符。 |
 | 文件已复制但列表没有 | 确认路径不是多嵌套一层 `ecommerce-image-designer/ecommerce-image-designer`；核对任务工作目录、来源、同名副本并刷新／重启。 |
 | 只读取正文，配套资料失败 | 确认完整11文件、资源按技能根解析。档案按业务工作目录解析；不要扩展成搜索用户目录或放宽工具权限。 |
 | 模型把未知旧值写成事实 | 保存原答卷，核对档案，再交独立校验／新候选；不要把修改后的答案覆盖原始失败。 |
@@ -338,4 +450,6 @@ Write-Output "备份已保留：$BackupDir"
 
 本手册编写会话只核对分发／安装命令及文档，不为团队实际安装、不发布包、不重新调用模型、MCP 或收费出图。新的成员环境、业务生成与视觉验收按上述步骤分别记录。
 
-本次已在隔离临时目录实际验证固定快照打包、11文件摘要、中文／空格路径安装、重复安装拒绝、错误ZIP／文件摘要拒绝，以及限定目录备份、同快照重装／恢复和移出式卸载；合成用户文件保留。所有PowerShell代码块另作语法检查。这不等于真实成员宿主发现、跨版本数据迁移或业务出图验收。
+初版手册编写时已在隔离临时目录实际验证固定快照打包、11文件摘要、中文／空格路径安装、重复安装拒绝、错误ZIP／文件摘要拒绝，以及限定目录备份、同快照重装／恢复和移出式卸载；合成用户文件保留。所有PowerShell代码块另作语法检查。这不等于真实成员宿主发现、跨版本数据迁移或业务出图验收。
+
+本轮成员流程修复新增15项Windows PowerShell工作流回归：真实执行本手册代码块，检查缺清单、坏JSON、缺ZIP、摘要错误、坏ZIP、ZIP结构错误、旧验证结果失效、未验证／ZIP变更后安装拒绝、同名目录和联接保护、双引号清洗及同快照备份恢复。语法树另核对验证／安装各自只有一个完整提交语句；本地共124 Python、15 Node及结构／场景格式检查通过。重新下载正式v0.1.0包验证带引号中文空格目录、十一文件安装摘要与合成用户数据保留，所有本轮临时环境已移除。没有新增模型、图像MCP或收费出图调用，没有改变已有安装配置或已发布附件；旧Release手册保持历史版本，不能据本地检查声称已更新远端CI或发行物。

@@ -6,7 +6,9 @@
 
 团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
 
-正式版本：[v0.1.0](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.0)。使用 Release 附件中的完整技能包、手册及摘要清单；准确提交、打包修复和已知限制见[发布回执](docs/RELEASE-v0.1.0.md)。
+普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装；第3节打包仅供维护者。本仓库手册已修复交互执行时的失败后假成功，并支持带双引号的目录输入；v0.1.1 随包手册包含这些修复，v0.1.0 保留为历史版本。
+
+修正版发行：[v0.1.1](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.1)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。技能运行包沿用 v0.1.0 的已验证字节；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
 
 ## 使用
 

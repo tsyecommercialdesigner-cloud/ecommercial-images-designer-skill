@@ -4,6 +4,8 @@
 
 技能入口：[ecommerce-image-designer](.agents/skills/ecommerce-image-designer/SKILL.md)。课程来源与适用边界见 [方法摘要](.agents/skills/ecommerce-image-designer/references/source-methods.md)。宠物烘干箱只作为来源案例，不提供其他商品的参数默认值。
 
+团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
+
 ## 使用
 
 在此仓库中使用支持本地 Skills 的宿主，显式调用示例：

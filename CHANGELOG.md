@@ -30,3 +30,7 @@
 ### 本地交付准备
 
 新增Windows CI和统一检查脚本；此变化未修改技能包，当前入口SHA256保持上述viewer值。CI覆盖以main为目标的PR，以及main/dev推送，供合并后与dev快进同步分别复验；运行约定见 [交付说明](docs/DELIVERY.md)。远端尚未执行，不记录虚构的PR、合入SHA或绿色CI。
+
+### 2026-10-23交付结果
+
+PR #1已按保留历史方式合入，PR、合入main及dev快进同步三阶段CI通过；精确SHA与运行链接见[交付证据](docs/DELIVERY.md)。补交本证据与Beads关闭导出时仍走PR门禁，不直接推送main。

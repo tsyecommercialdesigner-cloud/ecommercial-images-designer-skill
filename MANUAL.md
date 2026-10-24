@@ -4,6 +4,8 @@
 
 **角色先分清：普通成员从第4节下载同版正式附件并校验安装，不需要克隆仓库、安装开发工具或自行打包。开发者／维护者才执行第3、10节的源码与发行操作；MCP管理员负责第5节的服务连接。** 本手册针对v0.1.3完整目录包（单数 `reference/`）。只有正式Release附件才作为成员安装来源；发行前的本地／草稿文件不表示已发布。旧v0.1.0–v0.1.2及附件保留，不原地覆盖。
 
+正式发行已核对：[v0.1.3 Release](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.3)（ID422612888），[冻结随包手册](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.3/MANUAL.md)和[发布回执](docs/RELEASE-v0.1.3.md)。本仓库手册在发布后补充了准确来源／回执，安装代码块和ZIP摘要保持同版；普通成员优先使用下载的冻结手册，不覆盖或改写已发布附件。
+
 团队当前可以分发**固定提交的完整 Skill 目录**，让成员安装到业务项目的 `.agents/skills/ecommerce-image-designer/`。只策划时不必部署图像服务；实际出图前，由管理员准备指定 MCP，使用者确认具体方案和本次收费范围。
 
 **普通成员从第 4 节开始：下载正式 Release → 校验 → 安装 → 在宿主中加载。不要执行第 3 节的维护者打包命令。** 只有负责制作／发布技能包的人才需要第 3、10 节；配置图像服务的人看第 5 节。成员不需要克隆源码或自行打包。
@@ -16,7 +18,7 @@
 |---|---|
 | 源码仓库 | [ecommercial-images-designer-skill](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill) |
 | 固定技能内容树 | `bba6068eafac9b65c24ee019df79f00fc2d88ea4`；同版 `release.json.skill_tree` 与此相同 |
-| 完整发行源码提交 | 同版 `release.json.source_commit`／`revision` 均为40位完整Git SHA；对照Release目标和第10节记录，不以本地HEAD或分支名替代 |
+| 完整发行源码提交 | `8c41b69629e1af47b3429bdc41f6a2884a328453`；正式tag和同版release.json.source_commit／revision均对应此提交，不以当前main/dev代替 |
 | 技能名称 | `ecommerce-image-designer`；界面显示名“电商图片设计” |
 | 源码中的技能根 | `.agents/skills/ecommerce-image-designer/` |
 | 分发类型 | 单技能目录；MIT 许可证；不是现成的安装器或插件 |

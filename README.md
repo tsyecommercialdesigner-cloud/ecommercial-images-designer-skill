@@ -4,15 +4,15 @@
 
 技能入口：[ecommerce-image-designer](.agents/skills/ecommerce-image-designer/SKILL.md)。课程来源与适用边界见 [方法摘要](.agents/skills/ecommerce-image-designer/reference/source-methods.md)。宠物烘干箱只作为来源案例，不提供其他商品的参数默认值。
 
-v0.1.3候选已按新版规范迁移至单数 `reference/`，尚未发行；v0.1.2 冻结包仍使用 `references/`。团队成员继续使用正式 Release，不用开发目录覆盖安装；后续升级须核对新版本完整包和摘要，旧标签、附件与失败记录保留。
+v0.1.3已正式发布，完整技能包使用单数 `reference/`；旧v0.1.2仍使用 `references/`。成员下载同版四附件，按手册备份后升级完整包，不只替换手册；旧标签、附件与失败记录保留。
 
-候选免费宿主验证及失败修复见[本轮记录](docs/HOST-RELEASE-aju.md)。团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
+本版免费宿主验证及失败修复见[本轮记录](docs/HOST-RELEASE-aju.md)。团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
 
-普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装；第3节打包仅供维护者。本仓库手册已修复交互执行时的失败后假成功，并支持带双引号的目录输入；v0.1.2 随包手册包含这些修复，v0.1.0 保留为历史版本。
+普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装；第3节打包仅供维护者。本仓库手册已修复交互执行时的失败后假成功，并支持带双引号的目录输入；v0.1.3 随包手册包含这些修复，v0.1.0 保留为历史版本。
 
-修正版发行：[v0.1.2](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.2)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。发布源码、七附件摘要及CI记录见 [v0.1.2 发布回执](docs/RELEASE-v0.1.2.md)。技能运行包采用新的固定内容树和 ZIP 摘要；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
+修正版发行：[v0.1.3](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.3)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。发布源码、七附件摘要及CI记录见 [v0.1.3 发布回执](docs/RELEASE-v0.1.3.md)。技能运行包采用新的固定内容树和 ZIP 摘要；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
 
-v0.1.2 由 Skill 自行策划、文案排版与提示词，确认后直连两个 MCP 的核心生成／批量工具；不依赖服务端策划、复刻编译、resources 或 prompt 模板，见[适配与免费回归记录](docs/CORE-IMAGE-ADAPTER-64a.md)。旧 v0.1.0／v0.1.1 保留，成员升级需取得 v0.1.2 的完整技能包，不能只替换手册。
+v0.1.2 由 Skill 自行策划、文案排版与提示词，确认后直连两个 MCP 的核心生成／批量工具；不依赖服务端策划、复刻编译、resources 或 prompt 模板，见[适配与免费回归记录](docs/CORE-IMAGE-ADAPTER-64a.md)。旧 v0.1.0／v0.1.1 保留，成员升级需取得 v0.1.3 的完整技能包，不能只替换手册。
 
 ## 使用
 
@@ -39,7 +39,7 @@ $ecommerce-image-designer
 | `docs/USAGE.md`、`docs/VALIDATION.md` | 发现／使用说明、验证命令和覆盖边界。 |
 | `CONVENTIONS.md`、`AGENTS.md`、`docs/ENGINEERING-GUIDE.md` | 项目工程约定。 |
 
-安装、配置和升级见 [手册](MANUAL.md)，简要调用见 [使用说明](docs/USAGE.md)。开发检查见 [验证说明](docs/VALIDATION.md)，仓库根执行 `./scripts/check.ps1`，先按验证说明准备锁定依赖。已提供 [Windows CI配置及交付约定](docs/DELIVERY.md)，准确提交的远端执行与门禁证据见各版发布回执；已发布 v0.1.0–v0.1.2，不能据此推断当前开发工作树已发布或跨宿主兼容。版本修复和入口摘要变化见 [CHANGELOG.md](CHANGELOG.md)。
+安装、配置和升级见 [手册](MANUAL.md)，简要调用见 [使用说明](docs/USAGE.md)。开发检查见 [验证说明](docs/VALIDATION.md)，仓库根执行 `./scripts/check.ps1`，先按验证说明准备锁定依赖。已提供 [Windows CI配置及交付约定](docs/DELIVERY.md)，准确提交的远端执行与门禁证据见各版发布回执；已发布 v0.1.0–v0.1.3，不能据此推断当前开发工作树已发布或跨宿主兼容。版本修复和入口摘要变化见 [CHANGELOG.md](CHANGELOG.md)。
 
 完整需求覆盖与本轮修复见 [Skill 审查记录](docs/SKILL-REVIEW.md)，包括两个 MCP 的实际入口限制、方案批准粒度和反馈回退证据。
 

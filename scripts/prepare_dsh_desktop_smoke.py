@@ -9,23 +9,32 @@ import shutil
 
 REPO = Path(__file__).resolve().parents[1]
 
+_workspace_spec = importlib.util.spec_from_file_location('evaluation_workspace', Path(__file__).with_name('evaluation_workspace.py'))
+_workspace = importlib.util.module_from_spec(_workspace_spec)
+_workspace_spec.loader.exec_module(_workspace)
+validate_root, claim_root, initialize_project = _workspace.validate_root, _workspace.claim_root, _workspace.initialize_project
+
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    root = args.output.resolve()
-    if root.exists() or root.is_relative_to(REPO) or not root.name.startswith('dsh-skill-host-76d8-'):
-        parser.error('Use a new external directory named dsh-skill-host-76d8-<unique-id>')
+    try:
+        root = validate_root(args.output)
+    except ValueError as error:
+        parser.error(str(error))
+    if root.exists() or not root.name.startswith('dsh-skill-host-76d8-'):
+        parser.error('Use a new directory below .eval-workspaces named dsh-skill-host-76d8-<unique-id>')
     spec = importlib.util.spec_from_file_location('image_fixture', REPO / 'evals/mock_mcp.py')
     fixture = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(fixture)
-    root.mkdir(parents=True)
+    claim_root(root)
     for model in ('sonnet', 'sol'):
         for case in ('explicit', 'implicit', 'negative', 'recovery'):
             work = root / f'{model}-{case}-r1'
             work.mkdir()
-            (work / '.git').mkdir()  # A project-boundary marker, no Git operations.
+            initialize_project(work)  # Isolated project boundary; no commits or remotes.
             shutil.copytree(REPO / '.agents/skills/ecommerce-image-designer', work / '.agents/skills/ecommerce-image-designer')
             fixture.png_fixture(work / 'P01.png')
             fixture.png_fixture(work / 'R01.png', reference=True)
@@ -56,7 +65,11 @@ def main():
         contract_module = importlib.util.module_from_spec(contract_spec)
         contract_spec.loader.exec_module(contract_module)
         output_contract = contract_module.CONTRACT_ID
+    # The request asks for one NEW main image. Allocate its stable identity in
+    # trusted orchestration, independently of input P01/R01 and the model answer.
+    design_targets = {f'{model}-implicit-r1': ['M01'] for model in ('sonnet', 'sol')}
     (root / 'before.json').write_text(json.dumps(dict(skill_manifest=manifest, configuration_sha256=preserve,
+                                                  design_targets=design_targets,
                                                   orchestrator_manifest=orchestrator_manifest, output_contract=output_contract), indent=2), encoding='utf-8')
     print(root)
 

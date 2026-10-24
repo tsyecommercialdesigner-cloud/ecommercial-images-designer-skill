@@ -1,5 +1,7 @@
 # 模拟 MCP 实际行为评测：2026-10-22
 
+资料链接已随新规范迁至当前开发路径；下列历史摘要、模型成绩和失败记录不变，不表示迁移后重新完成 Host 验收。
+
 本轮确实运行了隔离模型与本地 stdio MCP，检查实际回复、工具参数、调用顺序和返回结果，不是条款走查。固定 E01–E42 每场景重复 3 次，修复后按受影响场景整组回归；最终选用 126 条记录，关键违规 0，选择／阶段、依据／记录、执行边界三项均分均为 **2.00/2**，达到 [量规 1.0](../evals/RUBRIC.md)。另补 Nano 正向确认变体 3 次，全部通过。
 
 这是分阶段修复后的组合回归结果，**不是最终同一 Skill 快照重新运行全部 126 次**。下表逐场景指定所用批次，没有从同场景三次重复中挑选成功项。历史失败及被替代批次完整保留。
@@ -27,7 +29,7 @@
 | E09 有重复仅询问容量冲突，未交付去掉争议主张的替代草案。 | 冲突只阻塞依赖该事实的部分；同轮给不含争议容量的草案。E09／E42 验证独立策划可继续。 |
 | E39 有方案直接沿用旧 1024×1024，未讨论与 256×256 底图／mask 的差异。 | 明确 mask 在 official_options.mask；局部编辑优先保留受支持底图尺寸，尺寸不支持时先讨论恢复底图或接受画布变化。三次均先说明差异、未提交。 |
 
-改动主要在 [SKILL.md](../.agents/skills/ecommerce-image-designer/SKILL.md)、[设计档案](../.agents/skills/ecommerce-image-designer/references/design-record.md) 和 [MCP 适配](../.agents/skills/ecommerce-image-designer/references/mcp-adapters.md)。没有把案例参数或真实服务输出写入通用商品事实。
+改动主要在 [SKILL.md](../.agents/skills/ecommerce-image-designer/SKILL.md)、[设计档案](../.agents/skills/ecommerce-image-designer/reference/design-record.md) 和 [MCP 适配](../.agents/skills/ecommerce-image-designer/reference/mcp-adapters.md)。没有把案例参数或真实服务输出写入通用商品事实。
 
 ## 实际调用证据
 

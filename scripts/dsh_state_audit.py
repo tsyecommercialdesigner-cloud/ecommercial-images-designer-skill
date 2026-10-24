@@ -11,10 +11,14 @@ QUERIES = {
 }
 
 
-def evidence_for(case, snapshot, work):
+def evidence_for(case, snapshot, work, *, target_images=None):
     """Ground truth comes from the original fixture request, never the answer."""
     evidence = dict(mode={'explicit': 'status', 'implicit': 'plan', 'recovery': 'revision'}[case],
                     images=[], facts=[], capabilities=[], locked_images=[], edit_images=[], baseline=dict.fromkeys(BASE))
+    if target_images is not None:
+        if case != 'implicit' or not isinstance(target_images, list) or len(target_images) != 1 or not isinstance(target_images[0], str) or not target_images[0].strip() or target_images[0] in {'P01', 'R01'}:
+            raise ValueError('Expected one independently allocated new draft identity')
+        evidence['target_images'] = target_images[:]
     if case == 'implicit':
         # These are annotations of the unchanged request already sent to the
         # model, not an expected answer or a new instruction appended to it.

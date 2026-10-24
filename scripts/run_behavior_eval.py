@@ -1,4 +1,4 @@
-"""Run fresh Codex processes against offline MCP doubles; raw evidence stays outside the repo."""
+"""Run fresh Codex processes against offline MCP doubles; raw evidence stays in an ignored repository-local workspace."""
 from __future__ import annotations
 
 import argparse
@@ -15,6 +15,12 @@ import sys
 import time
 
 REPO=Path(__file__).resolve().parents[1]
+
+_workspace_spec = importlib.util.spec_from_file_location('evaluation_workspace', Path(__file__).with_name('evaluation_workspace.py'))
+_workspace = importlib.util.module_from_spec(_workspace_spec)
+_workspace_spec.loader.exec_module(_workspace)
+validate_root, claim_root, initialize_project = _workspace.validate_root, _workspace.claim_root, _workspace.initialize_project
+
 MOCK=REPO/'evals/mock_mcp.py'
 spec=importlib.util.spec_from_file_location('mock_mcp',MOCK)
 mock=importlib.util.module_from_spec(spec)
@@ -47,11 +53,17 @@ def snapshot_skill(root):
     return target
 
 
+def frozen_catalog(root):
+    """Resumed runs use their own scenarios and rubric, never today's source."""
+    return json.loads((root / 'harness/scenarios.json').read_text(encoding='utf-8'))
+
+
 def run_trial(root,skill,case,repeat,timeout):
     tid=f'{case["id"]}-r{repeat}'
     work=root/tid
     if work.exists():raise RuntimeError('Refusing to overwrite trial '+tid)
     work.mkdir()
+    initialize_project(work)
     frozen_mock=root/'harness/mock_mcp.py'
     fixture_module=mock
     if frozen_mock.exists():
@@ -78,7 +90,7 @@ def run_trial(root,skill,case,repeat,timeout):
     description=re.search(r'^description: (.*)$',body,re.M)[1]
     prompt=f'''这是隔离的模拟宿主任务。所有MCP都是本地无网络替身，返回值明确标记simulated；模拟用户历史确认仅限本任务夹具。只通过已暴露的工具推进任务，不调用任何真实服务。不要把模拟产物描述为真实供应商生成。
 可用技能目录：ecommerce-image-designer，描述：{description}
-判断技能是否适用。适用时先用 eval_io.read_skill_resource 读取 SKILL.md，按条件读取相关 references；不适用时不加载该技能，按用户原任务转向当前可用的适用能力，不强加电商流程。
+判断技能是否适用。适用时先用 eval_io.read_skill_resource 读取 SKILL.md，按条件读取相关 reference 资料；不适用时不加载该技能，按用户原任务转向当前可用的适用能力，不强加电商流程。
 历史上下文与附件台账可用 eval_io.read_design_record 读取，包含可访问的合成图片和原方案；它们是输入，不是评分答案。需要持久记录可用 save_design_record。已明确给出的资料可复用，不要无故重复访谈。若需要用户补充或确认，结束本轮并提出具体问题。若已有足够确认则执行可执行的模拟工具，不能仅说会执行。
 最后以指定JSON输出：selected为是否使用该技能；stage为本轮实际定位的起点/阻塞阶段，而非你设想已完成的最终阶段；reply为给用户的实际答复；record为本轮保留的事实/映射/确认/修订摘要。
 上下文（来自模拟历史）：
@@ -121,23 +133,26 @@ def main():
     p.add_argument('--start-repeat',type=int,default=1)
     p.add_argument('--variant',choices=['nano-approved'],help='Additional E11 positive Nano workflow; report separately from the fixed suite')
     a=p.parse_args()
-    root=a.output.resolve()
-    if root.is_relative_to(REPO):raise SystemExit('Raw evidence output must be outside source repository')
+    try:
+        root=validate_root(a.output)
+    except ValueError as error:
+        p.error(str(error))
     if a.repeats<1 or not 1<=a.workers<=6:raise SystemExit('Invalid repetition/worker bound')
-    root.mkdir(parents=True,exist_ok=True)
+    claim_root(root)
     skill=snapshot_skill(root)
     harness=root/'harness';harness.mkdir(exist_ok=True)
-    for source in (MOCK,Path(__file__).resolve(),REPO/'evals/scenarios.json'):
+    for source in (MOCK,Path(__file__).resolve(),Path(__file__).with_name('evaluation_workspace.py'),REPO/'evals/scenarios.json'):
         dest=harness/source.name
         if not dest.exists():shutil.copyfile(source,dest)
-    cases=json.loads((REPO/'evals/scenarios.json').read_text(encoding='utf-8'))['cases']
+    catalog=frozen_catalog(root)
+    cases=catalog['cases']
     if a.cases!='all':
         wanted=set(a.cases.split(','));cases=[c for c in cases if c['id'] in wanted]
         if len(cases)!=len(wanted):raise SystemExit('Unknown case selection')
     if a.variant:
         if [c['id'] for c in cases]!=['E11']:raise SystemExit('nano-approved variant requires --cases E11')
         cases[0]=dict(cases[0],_variant=a.variant,context=cases[0]['context']+' 所选服务为Nano Banana核心任务接口；M01完整提示词、R01仅风格在前/P01商品身份在后的顺序及参数均已展示确认且费用明确授权，尚未提交。没有策划/确认/导出/评审扩展工具。')
-    info=dict(rubric_version='1.0',case_ids=[c['id'] for c in cases],repeats=a.repeats,workers=a.workers,timeout_seconds=a.timeout,model_selection='CLI supported default; no model override',cli_version=subprocess.check_output([shutil.which('codex'),'--version'],text=True).strip(),harness_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in harness.iterdir() if p.is_file()},isolation=dict(ignore_user_config=True,disabled=DISABLED,real_image_servers_loaded=False,stdin_mock_implementation=str(harness/'mock_mcp.py')))
+    info=dict(rubric_version=catalog['rubric_version'],case_ids=[c['id'] for c in cases],repeats=a.repeats,workers=a.workers,timeout_seconds=a.timeout,model_selection='CLI supported default; no model override',cli_version=subprocess.check_output([shutil.which('codex'),'--version'],text=True).strip(),harness_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in harness.iterdir() if p.is_file()},isolation=dict(ignore_user_config=True,disabled=DISABLED,real_image_servers_loaded=False,stdin_mock_implementation=str(harness/'mock_mcp.py')))
     (root/'run.json').write_text(json.dumps(info,ensure_ascii=False,indent=2),encoding='utf-8')
     results=[]
     with ThreadPoolExecutor(max_workers=a.workers) as pool:

@@ -52,7 +52,7 @@ def audit(root):
                 skill = work / '.agents/skills/ecommerce-image-designer/scripts'
                 checker = load(skill / 'validate_design_state.py', 'audit_frozen_checker')
                 compiler = load(skill / 'compile_design_state.py', 'audit_frozen_compiler')
-                evidence = evidence_for(case, snapshot, work)
+                evidence = evidence_for(case, snapshot, work, target_images=run.get('designTargets', {}).get(work.name))
                 target = root / 'postprocessing' / work.name
                 if read(target / 'evidence.json') != evidence:
                     raise ValueError('Stored evidence differs from original inputs/tools')

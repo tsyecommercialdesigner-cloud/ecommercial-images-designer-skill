@@ -39,7 +39,7 @@ class PackageValidationTests(unittest.TestCase):
         self.assertTrue(any("invalid frontmatter" in e for e in validator.validate_skill(self.skill)))
 
     def test_missing_resource_is_rejected(self):
-        self.entry.write_text(self.valid_text + "\n[方法](references/missing.md)\n", encoding="utf-8")
+        self.entry.write_text(self.valid_text + "\n[方法](reference/missing.md)\n", encoding="utf-8")
         self.assertTrue(any("missing linked resource" in e for e in validator.validate_skill(self.skill)))
 
     def test_link_outside_package_is_rejected(self):
@@ -65,11 +65,54 @@ class PackageValidationTests(unittest.TestCase):
         errors = validator.validate_skill(self.skill)
         self.assertEqual(sum("undiscoverable" in e for e in errors), 2)
 
-    def test_nested_discoverable_references_are_valid(self):
-        self.entry.write_text(self.valid_text + "\n[A](a.md)\n", encoding="utf-8")
-        (self.skill / "a.md").write_text("[B](b.md)", encoding="utf-8")
-        (self.skill / "b.md").write_text("end", encoding="utf-8")
+    def test_chained_guidance_is_rejected_until_directly_indexed(self):
+        (self.skill / "reference").mkdir()
+        self.entry.write_text(self.valid_text + "\n[A](reference/a.md)\n", encoding="utf-8")
+        (self.skill / "reference/a.md").write_text("[B](reference/b.md)", encoding="utf-8")
+        (self.skill / "reference/b.md").write_text("end", encoding="utf-8")
+        self.assertTrue(any("not directly indexed" in e for e in validator.validate_skill(self.skill)))
+        with self.entry.open('a', encoding='utf-8') as output:
+            output.write("\n[B](reference/b.md)\n")
         self.assertEqual(validator.validate_skill(self.skill), [])
+
+    def test_legacy_or_nested_layout_is_rejected(self):
+        for path in ('references/a.md', 'reference/nested/a.md'):
+            with self.subTest(path=path):
+                resource = self.skill / path
+                resource.parent.mkdir(parents=True)
+                resource.write_text('guidance', encoding='utf-8')
+                self.entry.write_text(self.valid_text + f'\n[A]({path})\n', encoding='utf-8')
+                self.assertTrue(any('resource directory' in e for e in validator.validate_skill(self.skill)))
+                resource.unlink()
+                resource.parent.rmdir()
+
+    def test_executable_must_be_indexed_and_flat(self):
+        (self.skill / 'scripts').mkdir()
+        (self.skill / 'scripts/check.py').write_text('pass', encoding='utf-8')
+        self.assertIn('resource not directly indexed: scripts/check.py', validator.validate_skill(self.skill))
+        self.entry.write_text(self.valid_text + '\n[Check](scripts/check.py)\n', encoding='utf-8')
+        self.assertEqual(validator.validate_skill(self.skill), [])
+
+    def test_body_budget_counts_blank_and_code_lines(self):
+        header = '---\nname: test-skill\ndescription: 商品设计验证样例\n---\n'
+        self.entry.write_text(header + '# Title\n' + '\n' * 499, encoding='utf-8')
+        self.assertEqual(validator.validate_skill(self.skill), [])
+        self.entry.write_text(header + '# Title\n' + '\n' * 500, encoding='utf-8')
+        self.assertTrue(any('500 lines' in e for e in validator.validate_skill(self.skill)))
+
+    def test_link_case_is_portable_even_on_windows(self):
+        (self.skill / 'reference').mkdir()
+        (self.skill / 'reference/rules.md').write_text('guidance', encoding='utf-8')
+        self.entry.write_text(self.valid_text + '\n[Rules](reference/Rules.md)\n', encoding='utf-8')
+        self.assertTrue(validator.validate_skill(self.skill))
+        self.entry.write_text(self.valid_text + '\n[Rules](reference/rules.md)\n', encoding='utf-8')
+        self.assertEqual(validator.validate_skill(self.skill), [])
+
+    def test_description_xml_and_metadata_non_string_are_rejected(self):
+        self.entry.write_text(self.valid_text.replace('商品设计验证样例', '<tool>design</tool>'), encoding='utf-8')
+        self.assertIn('description contains XML tags', validator.validate_skill(self.skill))
+        self.entry.write_text(self.valid_text.replace('---\n\n#', 'metadata:\n  version: 1\n---\n\n#'), encoding='utf-8')
+        self.assertIn('metadata must map strings to strings', validator.validate_skill(self.skill))
 
     def test_resource_symlink_escape_is_rejected(self):
         outside = self.skill.parent / "outside.md"

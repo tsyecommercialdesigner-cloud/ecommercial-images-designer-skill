@@ -1,5 +1,9 @@
 # 本地验证与覆盖边界
 
+v0.1.3发行前新增[真实Host与确定性重放记录](HOST-RELEASE-aju.md)：161 Python／15 Node，普通权限沙箱及16项安装MCP契约检查通过；Codex修复批12次、DSH8次与独立重放分别记分，不以候选成绩改判原稿。
+
+当前开发树按新版规范改造的范围、基线、失败与复验见 [本轮对照报告](STANDARDS-ALIGNMENT-g2i.md)。以下按日期保留历次结果，旧数量、摘要和 Host 成绩不表示当前树已通过相同实测。
+
 76d.8.1已由用户接受overload覆盖例外后关闭，原失败及评分保持不变。交付检查入口scripts/check.ps1现同时运行Python和离线Node测试；Node22+、标准库，无npm依赖，Windows CI使用runner现有Node并在日志记录实际版本。DSH_TEST_PYTHON仅在检查子进程期间指向uv既有环境并恢复原值，不运行真实宿主或收费出图。新增setup-node的准备方案因OAuth缺workflow scope而撤回，历史拒绝及修复提交保留。
 
 后续已接入[测试宿主自动后处理](DSH-ORCHESTRATION-76d81.md)：八项尝试、七项正常结束，Sol显式状态上游overload未重试；原稿5项通过，五个正向候选5/5通过、两个反例不编译。独立审计分别保留原稿及候选，不宣称8/8。109 Python、15 Node及结构／42格式检查通过，既有安装配置和门禁未改。
@@ -12,13 +16,13 @@
 
 ## 可复现入口
 
-开发检查使用 Python 3.12+、uv 和 `uv.lock` 锁定的 PyYAML 6.0.3；这不是技能日常使用的运行依赖。以下 PowerShell 命令在仓库根运行，将开发环境和缓存放在独立临时位置，避免污染技能或用户配置。
+开发检查使用 Git、Python 3.12+、uv、Node.js 22+ 和 `uv.lock` 锁定的 PyYAML 6.0.3；这不是技能日常使用的运行依赖。以下 PowerShell 命令在仓库根运行，复用本仓库已忽略的开发环境与缓存，避免污染技能或用户配置。环境在准备阶段创建，日常复用，不因每次评测重复安装；用户已有环境变量覆盖时先核对实际位置。
 
 首次准备：
 
 ```powershell
-$env:UV_PROJECT_ENVIRONMENT = Join-Path $env:TEMP 'ecommerce-image-designer-checks'
-$env:UV_CACHE_DIR = Join-Path $env:TEMP 'ecommerce-image-designer-checks-cache'
+$env:UV_PROJECT_ENVIRONMENT = Join-Path (Get-Location).Path '.venv'
+$env:UV_CACHE_DIR = Join-Path (Get-Location).Path '.eval-cache/uv'
 $env:PYTHONDONTWRITEBYTECODE = '1'
 uv sync --locked --group dev
 if ($LASTEXITCODE -ne 0) { throw 'Dependency preparation failed' }
@@ -27,8 +31,8 @@ if ($LASTEXITCODE -ne 0) { throw 'Dependency preparation failed' }
 日常检查沿用已准备好的环境。`--no-sync` 防止检查期间临时安装或升级依赖；失败需先回到准备步骤定位原因。
 
 ```powershell
-$env:UV_PROJECT_ENVIRONMENT = Join-Path $env:TEMP 'ecommerce-image-designer-checks'
-$env:UV_CACHE_DIR = Join-Path $env:TEMP 'ecommerce-image-designer-checks-cache'
+$env:UV_PROJECT_ENVIRONMENT = Join-Path (Get-Location).Path '.venv'
+$env:UV_CACHE_DIR = Join-Path (Get-Location).Path '.eval-cache/uv'
 $env:PYTHONDONTWRITEBYTECODE = '1'
 uv run --frozen --no-sync --group dev python -B scripts/validate_skill.py --evals evals/scenarios.json
 if ($LASTEXITCODE -ne 0) { throw 'Package validation failed' }
@@ -36,9 +40,9 @@ uv run --frozen --no-sync --group dev python -B -m unittest discover -s tests -v
 if ($LASTEXITCODE -ne 0) { throw 'Validator tests failed' }
 ```
 
-校验器默认定位本仓库技能；可用 `--skill <完整技能目录>` 检查复制后的包，不依赖调用时的工作目录。它检查 YAML 类型与边界、名称、必需资源链接、逃逸路径、可达引用、许可证、UI 元数据与评测数据格式；不会调用 MCP、读取密钥或证明模型遵守业务约束。日志中的 PASS 也明确标为结构／资源检查。
+校验器默认定位本仓库技能；可用 `--skill <完整技能目录>` 检查复制后的包，不依赖调用时的工作目录。它检查 YAML 类型与边界、名称、必需资源链接、逃逸路径、入口一跳索引、一级目录、正文500行预算、大小写、许可证、UI 元数据与评测数据格式；不会调用 MCP、读取密钥或证明模型遵守业务约束。日志中的 PASS 也明确标为结构／资源检查。
 
-结构失败返回非零；单元测试用临时合成包验证空描述、重名键、不安全 YAML、缺失引用、越界路径、链接逃逸、孤立引用和非法元数据等失败路径。测试产物位于本次临时目录，源码不保存真实图片或响应。
+结构失败返回非零；描述语义、token预算及实际触发另行审核。Git忽略模板在临时独立仓库用正反例和实际暂存清单验证。单元测试用临时合成包验证空描述、重名键、不安全 YAML、缺失引用、越界路径、链接逃逸、孤立引用和非法元数据等失败路径。测试产物位于本次临时目录，源码不保存真实图片或响应。
 
 ## 本轮检查记录：2026-10-22
 
@@ -142,3 +146,16 @@ if ($LASTEXITCODE -ne 0) { throw 'Validator tests failed' }
 查明并修正文字稿恢复与服务任务恢复路由混淆、通用提示词对缺失旧值的回填、原生团队工具可见性与拒绝的关系，以及上游错误结束被 runner 记为完成的问题。69 项 Python、8 项 Node 与结构／42 场景格式检查通过。新包摘要、逐批失败、真实双模型同包复验与当前结论见[76d.8.1 报告](DSH-RECOVERY-76d81.md)，最终同包主集机械8/8、语义7/8：Sol4/4，Sonnet3/4（恢复失败），不以机械通过代替语义合格；任务保持进行中。
 
 后续用户授权只读发现例外及重启后的三批结果仍见该报告。当前代码本地 71 项 Python、13 项 Node 与结构／资源／42 格式检查通过；24 个试验会话及零模型探针释放成功，持久化历史保留，未再崩溃。当前 scope81 同包主集8次尝试，7正常结束、1 Sol 上游过载；语义4通过、3失败、1上游未获答案，不能判完整通过。Sonnet 来源／状态解释及冻结范围仍失败，76d.8.1 保持进行中。免费 guard、安装、配置与默认模型均保留；无收费出图和新增远端 CI 声明。
+
+## 新评测的环境与归档
+
+三个准备／运行入口 `run_behavior_eval.py`、`run_host_smoke.py`、`prepare_dsh_desktop_smoke.py` 只接受仓库 `.eval-workspaces/` 下的独立目录，不再强制外置。每个 CLI／DSH 试验有独立 `.git` 边界，避免继承父仓库的技能或规则；该边界本身不证明真实 Host 行为已回归。原生 DSH 运行时仍须按既有 lifecycle 释放，持久化历史保留；旧外部证据仅可按原冻结版本只读审计，不自动迁移或删除。
+
+结束模型、CLI 和本次服务进程后，先核对日志不含秘密和客户私有数据，再在调用方 finally 中调用：
+
+```powershell
+uv run --frozen --no-sync --group dev python -X utf8 -B scripts/evaluation_workspace.py --archive-and-clean $runRoot
+if ($LASTEXITCODE -ne 0) { throw '归档或清理失败，保留现场并报告路径' }
+```
+
+只处理标记属于本仓库的本次目录；归档位于 `.eval-runs/archive-<owner>/evidence.zip`，逐文件摘要验证后才清理，`summary.json` 记录路径、摘要和清理结果。根目录、无所有权、链接、归档不一致或清理失败均不报告成功。它不负责停止 Host、不自动脱敏，也不删除旧环境或用户数据。系统临时目录的单元测试由 TemporaryDirectory/finally 收尾；CI 临时环境受 runner 生命周期管理。必要证据按制度保留，不能以清理为由删除失败历史。

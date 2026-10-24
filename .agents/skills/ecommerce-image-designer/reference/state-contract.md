@@ -78,6 +78,12 @@ python -X utf8 -B <技能根>/scripts/validate_design_state.py <状态JSON> --ev
 python -X utf8 -B <技能根>/scripts/compile_design_state.py <原始答卷> --evidence <可信证据JSON> --output <全新候选目录>
 ```
 
+### 两个 CLI 的调用契约
+
+上述模板中的 `<技能根>` 必须替换为宿主返回的实际目录；三个文件路径和候选目录使用调用方核实的绝对路径，Shell 中按含空格参数引用。工作目录不限，UTF-8 输入；执行前准备 Python 3.10+，不在调用阶段安装。验证器的 `record` 为必填文件，`--evidence` 必填，`--render` 默认关闭，打开时 stdout 改为 Markdown；编译器的 `record`、`--evidence`、`--output` 均必填，后者必须不存在。两者均无交互、无网络、无 MCP 调用。
+
+默认 stdout 仅一份 JSON。退出 0 为校验通过／新候选写完；可控输入、业务或文件错误退出 1，stdout 为 `valid=false` 和 error；缺参数或未知选项由 argparse 退出 2，诊断走 stderr，stdout 为空。调用方必须同时核对退出码、完整解析结果和适用产物，不以某个 success 字符串放行。编译器可能在文件系统错误时留下部分新目录，不能当成完成或覆盖重试；保留原稿与部分目录，核查后另选新目录。外部编排默认子进程预算 30 秒，超时／取消可能没有完整 JSON；保留失败状态并核对本次目录，不盲目重跑。它不是内置超时开关。
+
 产物 state.json、changes.json、view.md 分别保留新候选、字段路径差异及哈希、同源可读方案。拒绝覆盖已有目录。它使用同一 v2 验证器验证新候选；原始模型成绩与编译后候选成绩分别记录。新候选始终 execution=not_authorized、requires_user_review=true，必须回 S3 展示差异、待补信息及本轮可确认图号。不能以“状态已修复”代替用户确认，不能从模型自述获得出图授权。用户已指定上传映射或执行入口时不适用这个草案编译器。
 
 该脚本不自动安装进宿主事件链；没有外部编排调用时，宿主仅交付 pending 原答卷，不能宣称已自动编译。编译只保证证据绑定和字段作用域，不证明证据本身可信、文案无误、排版实际适配或视觉效果获接受。

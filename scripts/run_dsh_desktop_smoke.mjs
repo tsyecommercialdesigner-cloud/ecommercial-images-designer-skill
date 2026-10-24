@@ -10,7 +10,7 @@ import {createOwnedTestAgent,releaseOwnedTestAgent} from './dsh_test_lifecycle.m
 import {postprocessTrial} from './dsh_postprocess_client.mjs';
 
 const root=resolve(process.argv[2]??'');
-if(!process.argv[2] || !root.includes('dsh-skill-host-76d8-'))throw Error('Explicit prepared external evidence root required');
+if(!process.argv[2] || !root.includes('dsh-skill-host-76d8-'))throw Error('Explicit prepared evidence workspace required');
 const before=JSON.parse(await readFile(join(root,'before.json'),'utf8'));
 const python=resolve(process.argv[3]??'');
 if(!process.argv[3]||!(await stat(python)).isFile())throw Error('Pass the existing Python executable explicitly; no runtime installation');
@@ -38,6 +38,7 @@ const manifest={runtime,routes,cases:Object.keys(cases),repeats:1,workers:2,orig
   gatePolicy:{version:2,hostDiscovery:['list_agents'],teamMutationAllowed:false},
   previousDefault:catalog.default,skillManifest:before.skill_manifest,
   outputContract:before.output_contract??(before.skill_manifest['.agents/skills/ecommerce-image-designer/scripts/validate_design_state.py']?'ecommerce-design-state/v1':null),
+  designTargets:before.design_targets??{},
   lifecycleVersion:1,postprocessingVersion:1,orchestratorManifest:before.orchestrator_manifest,
   python,runtimeAgentsBefore,results:[]};
 await writeFile(join(root,'run.json'),JSON.stringify(manifest,null,2),{flag:'wx'});

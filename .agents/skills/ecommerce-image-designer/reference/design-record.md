@@ -14,7 +14,7 @@
 
 ### 纯文字恢复的专用交付
 
-使用 [状态契约](references/state-contract.md) 的 revision。它取代旧的四段散文、重复提示词和自由问题清单：state 仅复制原字段，proposal 仅定义局部新目标，next 仅列可修改范围的缺口与确认。
+使用入口已直接索引的单图状态契约 revision 分支。它取代旧的四段散文、重复提示词和自由问题清单：state 仅复制原字段，proposal 仅定义局部新目标，next 仅列可修改范围的缺口与确认。
 
 - state.locked_images 取本轮明确保留的已接受图；state.edit_images 仅含本轮修改图，next.confirm_images 与它相同。历史确认原话未存档不使本轮用户已给出的冻结指令变成 unknown。
 - baseline 的原文、尺寸、数量、视角、风格等未记为 null；图片来源逐图取证，事实来源不填成图片来源。

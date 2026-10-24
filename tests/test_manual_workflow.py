@@ -27,11 +27,13 @@ class ManualWorkflowTests(unittest.TestCase):
         self.project.mkdir()
         self.sentinel = self.project / 'customer.txt'
         self.sentinel.write_text('synthetic user data', encoding='utf-8')
-        self.archive = self.delivery / 'ecommerce-image-designer-v0.1.2.zip'
+        self.archive = self.delivery / 'ecommerce-image-designer-v0.1.3.zip'
         self.skill = REPO / '.agents/skills/ecommerce-image-designer'
         self.files = sorted(p for p in self.skill.rglob('*') if p.is_file() and '__pycache__' not in p.parts)
         self.assertEqual(len(self.files), 11)
-        self.manifest = dict(skill='ecommerce-image-designer', version='v0.1.2', skill_tree='4d27005fabe36d5bf19eb4fccda336cc39569ffe', revision='94859bd49482a15858f1beaf3eb7453b178ec81b', archive=self.archive.name,
+        # Synthetic ZIP for installer behavior only; this is not an authentic
+        # v0.1.3 tree/provenance check or migrated-Host acceptance.
+        self.manifest = dict(skill='ecommerce-image-designer', version='v0.1.3', skill_tree='bba6068eafac9b65c24ee019df79f00fc2d88ea4', revision='3a5c77f989d425e4c7554090c29058e5b289c3ae', source_commit='3a5c77f989d425e4c7554090c29058e5b289c3ae', archive=self.archive.name,
                              files=[dict(path=p.relative_to(self.skill).as_posix(), sha256=hashlib.sha256(p.read_bytes()).hexdigest()) for p in self.files])
         self.write_zip()
         (self.delivery / 'MANUAL.md').write_text('Fixture only; runnable blocks read from repository manual.', encoding='utf-8')
@@ -94,7 +96,7 @@ class ManualWorkflowTests(unittest.TestCase):
                 self.assertFalse(list(self.root.glob('ecommerce-verify-*')))
 
     def test_wrong_release_version_or_skill_tree_blocks_install(self):
-        for field,value in [('version','v0.1.1'),('skill_tree','0'*40)]:
+        for field,value in [('version','v0.1.2'),('skill_tree','0'*40),('source_commit','invalid-source')]:
             original=self.manifest[field]
             self.manifest[field]=value
             self.write_manifest()

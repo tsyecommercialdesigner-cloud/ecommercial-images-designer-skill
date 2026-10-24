@@ -27,12 +27,16 @@ def load(path, name):
     return module
 
 
-def process_trial(root, name):
+def process_trial(root, name, *, output_root=None, target_images=None):
     root = root.resolve()
     if not re.fullmatch(r'(sonnet|sol)-(explicit|implicit|negative|recovery)-r1', name):
         raise ValueError('Unknown fixed trial identity')
     work = root / name
-    output = root / 'postprocessing' / name
+    if output_root is not None:
+        output_root = output_root.resolve()
+        if output_root == root or output_root.is_relative_to(root) or root.is_relative_to(output_root):
+            raise ValueError('Replay output must be separate from original evidence')
+    output = (output_root if output_root is not None else root / 'postprocessing') / name
     # Refuse second processing, including a previous failed attempt.
     output.mkdir(parents=True, exist_ok=False)
     report = dict(version=1, trial=name, trace_passed=False, raw_passed=False, raw_evaluated=False,
@@ -69,7 +73,8 @@ def process_trial(root, name):
             checker = load(checker_path, 'frozen_trial_checker')
             compiler = load(compiler_path, 'frozen_trial_compiler')
             report.update(validator_sha256=sha(checker_path), compiler_sha256=sha(compiler_path))
-            evidence = evidence_for(case, snapshot, work)
+            allocated = target_images if target_images is not None else run.get('designTargets', {}).get(name)
+            evidence = evidence_for(case, snapshot, work, target_images=allocated)
             (output / 'evidence.json').write_text(json.dumps(evidence, ensure_ascii=False, indent=2), encoding='utf-8')
             # A parse failure cannot be repaired by compilation. A validation
             # failure stays a raw failure even if a new candidate is valid.

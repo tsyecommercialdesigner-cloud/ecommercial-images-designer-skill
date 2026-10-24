@@ -1,7 +1,7 @@
 """Real Codex CLI skill discovery smoke tests, with only free MCP tools exposed.
 
 Copies the skill into fresh repository-scope discovery directories. No injected
-skill catalog or mock MCP; raw evidence must stay outside the source repository.
+skill catalog or mock MCP; raw evidence uses a dedicated ignored workspace inside the source repository.
 Uses existing server launch commands, never copies credentials or environment.
 """
 from __future__ import annotations
@@ -21,6 +21,12 @@ from system_skills_guard import (SystemSkillsMismatch, host_suite_lock,
                                  prepare_system_skills, verify_cache)
 
 REPO = Path(__file__).resolve().parents[1]
+
+_workspace_spec = importlib.util.spec_from_file_location('evaluation_workspace', Path(__file__).with_name('evaluation_workspace.py'))
+_workspace = importlib.util.module_from_spec(_workspace_spec)
+_workspace_spec.loader.exec_module(_workspace)
+validate_root, claim_root, initialize_project = _workspace.validate_root, _workspace.claim_root, _workspace.initialize_project
+
 FREE = {
     "zhenzhen-gptimagegen2-5-mcp": ["get_model_guide"],
     "zhenzhen-nanobanana-mcp": ["list_models", "inspect_design_images", "get_ecommerce_design"],
@@ -46,6 +52,7 @@ def run(root: Path, case: str, repeat: int, servers: dict, timeout: int,
         cli: Path, host_home: Path, expected_cache: dict):
     work = root / f"{case}-r{repeat}"
     work.mkdir()  # Never overwrite an existing trial.
+    initialize_project(work)
     target = work / ".agents/skills/ecommerce-image-designer"
     shutil.copytree(REPO / ".agents/skills/ecommerce-image-designer", target)
     spec = importlib.util.spec_from_file_location("fixtures", REPO / "evals/mock_mcp.py")
@@ -143,14 +150,18 @@ def main():
     parser.add_argument("--timeout", type=int, default=240)
     args = parser.parse_args()
     root = args.output.resolve()
-    if root.exists() or root.is_relative_to(REPO) or args.repeats < 1 or not 1 <= args.workers <= 3:
-        parser.error("Use a new external evidence output and bounded repeats/workers")
+    if root.exists() or args.repeats < 1 or not 1 <= args.workers <= 3:
+        parser.error("Use a new repository-local evidence workspace and bounded repeats/workers")
     cli = args.cli.resolve(strict=True)
     actual_sha256 = hashlib.sha256(cli.read_bytes()).hexdigest()
     if args.system_cache_layout == "versioned" and not args.cli_sha256:
         parser.error("Versioned candidate requires its verified --cli-sha256")
     if args.cli_sha256 and args.cli_sha256.lower() != actual_sha256:
         parser.error("Selected CLI SHA256 differs; no Host process started")
+    try:
+        validate_root(root)
+    except ValueError as exc:
+        parser.error(str(exc))
     component_names = ["codex-command-runner.exe", "codex-windows-sandbox-setup.exe", "codex-code-mode-host.exe"]
     components = {name: hashlib.sha256((cli.parent / name).read_bytes()).hexdigest()
                   for name in component_names if (cli.parent / name).is_file()}
@@ -166,7 +177,7 @@ def main():
     for name in FREE:
         if name not in servers or not servers[name].get("command"):
             parser.error("Existing stdio server configuration required: " + name)
-    root.mkdir(parents=True)
+    claim_root(root)
     manifest = {str(p.relative_to(REPO)).replace("\\", "/"): hashlib.sha256(p.read_bytes()).hexdigest()
                 for p in (REPO / ".agents/skills/ecommerce-image-designer").rglob("*") if p.is_file()}
     run_manifest = dict(cli=str(cli), cli_version=subprocess.check_output([str(cli), "--version"], text=True).strip(),

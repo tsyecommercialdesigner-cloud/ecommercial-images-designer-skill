@@ -1,5 +1,7 @@
 # 76d.8.1：可校验状态与双模型免费集成复验
 
+资料链接已随新规范迁至当前开发路径；下列历史摘要、模型成绩和失败记录不变，不表示迁移后重新完成 Host 验收。
+
 后续已把校验／编译接入测试协调器，见[自动编排复验](DSH-ORCHESTRATION-76d81.md)。本页保留接入前各阶段的原始成绩和边界，不改写为新结果；日常宿主安装仍未增加自动钩子。
 
 2026-10-23，本机 DeepSeek Harness Desktop 0.2.1-rc.2，desktop profile。延续[前次失败及修复历史](DSH-RECOVERY-76d81.md)，不覆盖旧报告。最新 v2 首稿：Sonnet 4/4，Sol 1/4；新增确定性编译后，六份正向新候选通过同一冻结验证器。**编译结果不能改写模型首稿 5/8，也不代表原生宿主已自动执行编译。76d.8.1 保持进行中。**
@@ -8,7 +10,7 @@
 
 旧模板要求在台账、提示词、解释和追问中反复重述相同信息，导致图片角色被当成来源性质、查询状态被解释为生产就绪、已冻结 M01 又成为待确认对象。追加禁令不足以验证这些信息副本。
 
-新增 [v2 状态契约](../.agents/skills/ecommerce-image-designer/references/state-contract.md)，分离证据 state、建议 proposal 和 next：
+新增 [v2 状态契约](../.agents/skills/ecommerce-image-designer/reference/state-contract.md)，分离证据 state、建议 proposal 和 next：
 
 - source、role、provenance、reference_use、上传用途／序号分别记录。“合成测试”任务标签和事实来源不能证明某张图片的来源性质；恢复档案没记 provenance 时保持 unknown，不能改成实拍或竞品。
 - 产品事实绑定原文，缺失旧文案、尺寸、视角、风格保持 null。免费查询只证明本次查询成功、模型目录及配置存在；上游与性能固定 not_tested。

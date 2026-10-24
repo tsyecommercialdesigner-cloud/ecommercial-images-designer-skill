@@ -17,6 +17,18 @@ summary_spec.loader.exec_module(summary)
 
 
 class BehaviorHarnessTests(unittest.TestCase):
+    def test_resumed_cases_and_rubric_come_from_frozen_catalog(self):
+        parent = REPO / '.eval-workspaces'
+        parent.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=parent) as temp:
+            root = Path(temp)
+            (root / 'harness').mkdir()
+            catalog = {'rubric_version': '1.0', 'cases': [{'id': 'E11', 'prompt': 'frozen input'}]}
+            (root / 'harness/scenarios.json').write_text(json.dumps(catalog), encoding='utf-8')
+            self.assertEqual(grader.runner.frozen_catalog(root), catalog)
+            self.assertNotEqual(grader.runner.frozen_catalog(root)['rubric_version'],
+                                json.loads((REPO / 'evals/scenarios.json').read_text(encoding='utf-8'))['rubric_version'])
+
     def test_protocol_utf8_round_trip(self):
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp)/'E01-r1'

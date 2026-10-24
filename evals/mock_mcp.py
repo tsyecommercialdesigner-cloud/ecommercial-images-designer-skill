@@ -54,7 +54,7 @@ CRITERION=schema({'status':{'type':'string','enum':['pass','revise','uncertain']
 ASSESSMENT=schema({key:CRITERION for key in REVIEW_KEYS},REVIEW_KEYS)
 TOOLS = {
     'io': {
-        'read_skill_resource': ('Read one file from the available skill package. path=SKILL.md or references/....', schema({'path': S}, ['path'])),
+        'read_skill_resource': ('Read one file from the available skill package. path=SKILL.md or reference/....', schema({'path': S}, ['path'])),
         'read_design_record': ('Read the synthetic prior conversation/design record and available attachments.', schema({})),
         'save_design_record': ('Save a design/confirmation/submission/revision record in this isolated workspace.', schema({'record': O}, ['record'])),
     },

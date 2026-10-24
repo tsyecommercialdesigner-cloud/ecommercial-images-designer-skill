@@ -10,7 +10,7 @@
 
 技能名称为 `ecommerce-image-designer`，目录为 `.agents/skills/ecommerce-image-designer/`，该目录包含独立运行所需的全部指令参考资料和 MIT 许可证。它不包含图像服务的安装程序或凭据。
 
-当前团队分发采用[v0.1.0正式版](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.0)，发行源码为`68be9e2030605454bc30026b96c6957635c76a91`，运行快照仍为`0be00e0b8837e9f06633ce5b7504f14bfa711992`；本版已修复子树归档换行转换并核对全部Git字节。MANUAL属于运行快照之后新增的文档，不能声称0be00e0已包含它。摘要与发布验收见[发布回执](RELEASE-v0.1.0.md)，各宿主覆盖边界见[手册版本表](../MANUAL.md#已验证与仍需验收的范围)；正式发布不代表跨平台安装与收费出图已验证。
+当前团队分发采用 [v0.1.2 正式版](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.2)，准确源码、内容树、七附件及 Windows CI 见 [v0.1.2 发布回执](RELEASE-v0.1.2.md)。旧 v0.1.0／v0.1.1 保留历史版本。当前开发工作树迁移为 `reference/` 尚未发行；正式包仍为 `references/`，不可混用新旧摘要或按开发目录覆盖成员安装。
 
 ## Codex 中发现
 
@@ -18,7 +18,7 @@
 
 在此仓库新会话中检查技能选择器是否出现 `ecommerce-image-designer`，并确认来源指向本仓库的入口。若列表未更新，按宿主文档刷新或重启。文件存在和 YAML 校验成功均不能证明已被宿主发现。
 
-在其他工作区使用时，可将**完整技能目录**部署到所需作用域的 `.agents/skills/ecommerce-image-designer/`。先确认来源版本、比较同名目录和本地改动，不默认覆盖。复制包含所有 `references/`、`scripts/`、`agents/` 和许可证，共11文件，清单和可执行步骤见MANUAL；开发用tests／evals不属于运行依赖。技能以技能根解析参考资料，以用户工作目录或指定目录保存设计档案，不依赖本仓库的绝对盘符。
+在其他工作区使用时，可将**完整技能目录**部署到所需作用域的 `.agents/skills/ecommerce-image-designer/`。先确认来源版本、比较同名目录和本地改动，不默认覆盖。复制完整发行包的资源、`scripts/`、`agents/` 和许可证，共11文件，清单和可执行步骤见MANUAL；开发用tests／evals不属于运行依赖。技能以技能根解析参考资料，以用户工作目录或指定目录保存设计档案，不依赖本仓库的绝对盘符。
 
 此轮开发只写本仓库技能，没有自动复制到用户技能目录、安装 MCP、修改宿主配置或更改凭据。其他宿主的发现位置和产品扩展应按其实际版本单独核实，未验证时不声称支持。
 
@@ -42,7 +42,7 @@
 
 ## MCP 与费用
 
-规划阶段可离线进行；图像生成与编辑仅使用 `zhenzhen-gptimagegen2.5-mcp` 和 `zhenzhen-nanobanana-mcp`。按任务选择其中一个，出图前检查其真实工具及配置状态，不要求每次同时调用两个服务。适配与选择规则见 [MCP 说明](../.agents/skills/ecommerce-image-designer/references/mcp-adapters.md)。不要求用户把密钥发送到聊天或写进技能。两个指定服务均不可用或均不支持任务时，准确报告并保留可审阅方案，不使用其他 MCP、内置出图工具或直连 API 替代。
+规划阶段可离线进行；图像生成与编辑仅使用 `zhenzhen-gptimagegen2.5-mcp` 和 `zhenzhen-nanobanana-mcp`。按任务选择其中一个，出图前检查其真实工具及配置状态，不要求每次同时调用两个服务。适配与选择规则见 [MCP 说明](../.agents/skills/ecommerce-image-designer/reference/mcp-adapters.md)。不要求用户把密钥发送到聊天或写进技能。两个指定服务均不可用或均不支持任务时，准确报告并保留可审阅方案，不使用其他 MCP、内置出图工具或直连 API 替代。
 
 调用服务会按其规则产生费用。用户须先确认将执行的方案，收费操作还须处于已授权范围；一次指令可同时确认方案并授权生成，不重复索取有效授权。结果不明先查询原任务，下载失败先恢复文件，不自动换 ID、换服务或重画。
 

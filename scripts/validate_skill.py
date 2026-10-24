@@ -66,6 +66,8 @@ def validate_skill(directory: Path) -> list[str]:
     description = meta.get("description")
     if not isinstance(description, str) or not 1 <= len(description.strip()) <= 1024:
         errors.append("invalid description")
+    elif re.search(r"<[^>]*>", description):
+        errors.append("description contains XML tags")
     for key in ("license", "allowed-tools", "compatibility"):
         if key in meta and (not isinstance(meta[key], str) or not meta[key].strip()):
             errors.append(f"invalid {key}")
@@ -75,6 +77,8 @@ def validate_skill(directory: Path) -> list[str]:
         errors.append("metadata must map strings to strings")
     if not text[match.end():].strip():
         errors.append("empty skill body")
+    if len(text[match.end():].splitlines()) > 500:
+        errors.append("skill body exceeds the project budget of 500 lines")
     if meta.get("license") == "MIT" and not (directory / "LICENSE").is_file():
         errors.append("MIT license is not bundled")
 
@@ -106,20 +110,34 @@ def validate_skill(directory: Path) -> list[str]:
             elif not resolved.is_file():
                 errors.append(f"missing linked resource in {md.name}: {parsed.path}")
             else:
+                current = directory
+                for part in Path(unquote(parsed.path)).parts:
+                    if part not in {p.name for p in current.iterdir()}:
+                        errors.append(f"resource link case or spelling mismatch in {md.name}: {parsed.path}")
+                        break
+                    current = current / part
                 links[md.resolve()].add(resolved)
 
-    reached, pending = set(), [entry.resolve()]
-    while pending:
-        current = pending.pop()
-        if current not in reached:
-            reached.add(current)
-            pending.extend(links.get(current, set()))
+    # Project policy: required guidance must be directly indexed by SKILL.md.
+    # Cross-resource links may provide navigation, never hide another dependency.
+    reached = {entry.resolve()} | links.get(entry.resolve(), set())
     for md in markdown_files:
         if md.resolve() not in reached:
-            errors.append(f"undiscoverable Markdown resource: {md.name}")
+            errors.append(f"undiscoverable Markdown resource (not directly indexed): {md.name}")
     for resource in directory.rglob("*"):
         if not resource.resolve().is_relative_to(directory):
             errors.append(f"resource escapes package: {resource.name}")
+        relative = resource.relative_to(directory)
+        if resource.is_dir() and (len(relative.parts) != 1 or relative.name not in {"reference", "scripts", "assets", "agents"}):
+            errors.append(f"unsupported or nested resource directory: {relative.as_posix()}")
+        if resource.is_file():
+            if len(relative.parts) == 1 and resource.name not in {"SKILL.md", "LICENSE"}:
+                errors.append(f"unexpected root resource: {relative.as_posix()}")
+            if relative.parts[0] in {"scripts", "assets"} and resource.resolve() not in reached:
+                errors.append(f"resource not directly indexed: {relative.as_posix()}")
+    names = [p.relative_to(directory).as_posix().casefold() for p in directory.rglob("*")]
+    if len(names) != len(set(names)):
+        errors.append("case-insensitive resource name collision")
 
     ui = directory / "agents/openai.yaml"
     if ui.exists() and ui.resolve().is_relative_to(directory):

@@ -10,7 +10,7 @@ import {createOwnedTestAgent,releaseOwnedTestAgent} from './dsh_test_lifecycle.m
 import {postprocessTrial} from './dsh_postprocess_client.mjs';
 
 const root=resolve(process.argv[2]??'');
-if(!process.argv[2] || !root.includes('dsh-skill-host-76d8-'))throw Error('Explicit prepared external evidence root required');
+if(!process.argv[2] || !root.includes('dsh-skill-host-76d8-'))throw Error('Explicit prepared evidence workspace required');
 const before=JSON.parse(await readFile(join(root,'before.json'),'utf8'));
 const python=resolve(process.argv[3]??'');
 if(!process.argv[3]||!(await stat(python)).isFile())throw Error('Pass the existing Python executable explicitly; no runtime installation');

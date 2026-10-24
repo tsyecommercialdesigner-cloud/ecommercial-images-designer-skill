@@ -2,6 +2,9 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $PSScriptRoot
 Push-Location -LiteralPath $projectRoot
 try {
+    $gitVersion = & git --version
+    if ($LASTEXITCODE -ne 0 -or $gitVersion -notmatch '^git version ') { throw 'Git is required for isolated tracking and workspace checks' }
+    Write-Output "Git runtime: $gitVersion"
     uv run --frozen --no-sync --group dev python -X utf8 -B scripts/validate_skill.py --evals evals/scenarios.json
     if ($LASTEXITCODE -ne 0) { throw 'Package/scenario validation failed' }
     uv run --frozen --no-sync --group dev python -X utf8 -B -m unittest discover -s tests -v

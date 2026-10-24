@@ -4,7 +4,7 @@
 
 ## 指定服务与选择规则
 
-仅查询能力／配置状态时，使用 [状态契约](references/state-contract.md) 的 status。每次工具返回绑定一项 capabilities，模型 ID 复制实际目录；query_succeeded、configured 与 upstream/performance 分开，免费目录查询后两项均 not_tested。该模式没有自由就绪摘要、历史连通判断或选型推荐；实际选择／执行另按以下流程及 S3 授权处理。
+仅查询能力／配置状态时，使用入口已直接索引的状态契约 status 分支。每次工具返回绑定一项 capabilities，模型 ID 复制实际目录；query_succeeded、configured 与 upstream/performance 分开，免费目录查询后两项均 not_tested。该模式没有自由就绪摘要、历史连通判断或选型推荐；实际选择／执行另按以下流程及 S3 授权处理。
 
 Skill 负责两端统一的选题、事实核对、文案、布局、术语和完整提示词；用户确认后只调用以下两个服务的核心生成／编辑、实际批量提交和任务查询取图接口。两端均不依赖服务端策划、复刻编译、resources 或 prompt 模板，产品事实与确认档案由 Skill 保留。
 

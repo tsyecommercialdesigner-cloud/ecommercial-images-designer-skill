@@ -3,6 +3,7 @@ import importlib.util
 import json
 from pathlib import Path
 import unittest
+import tempfile
 
 spec = importlib.util.spec_from_file_location('dsh_audit', Path(__file__).resolve().parents[1] / 'scripts/audit_dsh_desktop_smoke.py')
 audit = importlib.util.module_from_spec(spec)
@@ -73,23 +74,42 @@ class DesktopAuditTests(unittest.TestCase):
 
     def test_recovery_rejects_unrelated_successful_reads(self):
         for unrelated in ('README.md', 'P01.png', 'other/design-record.json',
-                          '.agents/skills/ecommerce-image-designer/references/mcp-adapters.md'):
+                          '.agents/skills/ecommerce-image-designer/reference/mcp-adapters.md'):
             with self.subTest(unrelated=unrelated), self.assertRaisesRegex(ValueError, 'outside'):
                 audit.check_trace(self.recovery_trace(['design-record.json', unrelated]), 'recovery', self.route)
 
     def test_recovery_accepts_windows_paths_and_stage_resources(self):
         root = r'E:\fixture\recovery'
         paths = [root + r'\\design-record.json',
-                 root + r'\.agents\skills\ecommerce-image-designer\references\design-record.md']
+                 root + r'\.agents\skills\ecommerce-image-designer\reference\design-record.md']
         self.assertEqual(audit.check_trace(self.recovery_trace(paths), 'recovery', self.route, root)['tool_calls'], 3)
 
+    def test_old_snapshot_layout_is_audited_without_allowing_mixed_paths(self):
+        parent = Path(__file__).resolve().parents[1] / '.eval-workspaces'
+        parent.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=parent) as temp:
+            root = Path(temp)
+            package = root / '.agents/skills/ecommerce-image-designer'
+            (package / 'references').mkdir(parents=True)
+            old = '.agents/skills/ecommerce-image-designer/references/design-record.md'
+            new = old.replace('/references/', '/reference/')
+            self.assertEqual(audit.check_trace(self.recovery_trace(['design-record.json', old]),
+                                              'recovery', self.route, root)['tool_calls'], 3)
+            with self.assertRaisesRegex(ValueError, 'outside'):
+                audit.check_trace(self.recovery_trace(['design-record.json', new]), 'recovery', self.route, root)
+            (package / 'reference').mkdir()
+            with self.assertRaisesRegex(ValueError, 'Ambiguous'):
+                audit.check_trace(self.recovery_trace(['design-record.json', old]), 'recovery', self.route, root)
+
     def test_contract_resource_is_relevant_only_for_new_contract_and_does_not_allow_other_reads(self):
-        resource = '.agents/skills/ecommerce-image-designer/references/state-contract.md'
+        resource = '.agents/skills/ecommerce-image-designer/reference/state-contract.md'
         trace = self.recovery_trace(['design-record.json', resource])
         with self.assertRaisesRegex(ValueError, 'outside'):
             audit.check_trace(trace, 'recovery', self.route)
         self.assertEqual(audit.check_trace(trace, 'recovery', self.route, contract=True)['tool_calls'], 3)
-        for path in ('README.md', '.agents/skills/ecommerce-image-designer/scripts/validate_design_state.py'):
+        for path in ('README.md', '.agents/skills/ecommerce-image-designer/scripts/validate_design_state.py',
+                     '.agents/skills/ecommerce-image-designer/reference/review-and-revision.md',
+                     '.agents/skills/ecommerce-image-designer/reference/planning-and-prompts.md'):
             with self.assertRaisesRegex(ValueError, 'outside'):
                 audit.check_trace(self.recovery_trace(['design-record.json', resource, path]), 'recovery', self.route, contract=True)
 

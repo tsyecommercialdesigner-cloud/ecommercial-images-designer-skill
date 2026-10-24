@@ -71,11 +71,21 @@ def check_trace(snapshot, case, route, work=None, *, contract=False):
     if case == 'recovery':
         # This fixed fixture asks only for a text revision; unrelated successful
         # reads are also failures, not merely filesystem errors or guard denials.
+        resource_dir = 'reference'
+        if work:
+            package = Path(work) / '.agents/skills/ecommerce-image-designer'
+            if (package / 'references').is_dir():
+                if (package / 'reference').exists():
+                    raise ValueError('Ambiguous frozen resource layout')
+                resource_dir = 'references'  # Read-only auditing of old snapshots.
+        prefix = '.agents/skills/ecommerce-image-designer/' + resource_dir + '/'
+        recovery_resources = ('design-record.md',) if contract and resource_dir == 'reference' else (
+            'design-record.md', 'planning-and-prompts.md', 'review-and-revision.md')
         allowed = {'design-record.json'} | {
-            '.agents/skills/ecommerce-image-designer/references/' + name
-            for name in ('design-record.md', 'planning-and-prompts.md', 'review-and-revision.md')}
+            prefix + name
+            for name in recovery_resources}
         if contract:
-            allowed.add('.agents/skills/ecommerce-image-designer/references/state-contract.md')
+            allowed.add(prefix + 'state-contract.md')
         for path in reads:
             relative = ntpath.relpath(path, str(work)) if work and ntpath.isabs(path) else path
             if ntpath.normpath(relative).replace('\\', '/') not in allowed:

@@ -2,22 +2,25 @@
 
 适用对象：团队维护者、电商策划／设计使用者、MCP 服务管理员。本文命令面向 **Windows、PowerShell 7**，核对日期为 2026-10-24。
 
+**角色先分清：普通成员从第4节下载同版正式附件并校验安装，不需要克隆仓库、安装开发工具或自行打包。开发者／维护者才执行第3、10节的源码与发行操作；MCP管理员负责第5节的服务连接。** 本手册针对v0.1.3完整目录包（单数 `reference/`）。只有正式Release附件才作为成员安装来源；发行前的本地／草稿文件不表示已发布。旧v0.1.0–v0.1.2及附件保留，不原地覆盖。
+
 团队当前可以分发**固定提交的完整 Skill 目录**，让成员安装到业务项目的 `.agents/skills/ecommerce-image-designer/`。只策划时不必部署图像服务；实际出图前，由管理员准备指定 MCP，使用者确认具体方案和本次收费范围。
 
 **普通成员从第 4 节开始：下载正式 Release → 校验 → 安装 → 在宿主中加载。不要执行第 3 节的维护者打包命令。** 只有负责制作／发布技能包的人才需要第 3、10 节；配置图像服务的人看第 5 节。成员不需要克隆源码或自行打包。
 
-本手册对应 v0.1.2 的核心任务流程：Skill 独立完成策划、文案、排版与提示词，用户确认后调用指定 MCP 的核心生成／批量工具。旧 Release 保留历史版本；已安装旧包需按升级步骤取得本版完整技能包，不能只替换手册。详见[核心接口适配复验](docs/CORE-IMAGE-ADAPTER-64a.md)。
+本手册对应 v0.1.3 的新规范升级流程：Skill 独立完成策划、文案、排版与提示词，用户确认后调用指定 MCP 的核心生成／批量工具。旧 Release 保留历史版本；已安装旧包需按升级步骤取得本版完整技能包，不能只替换手册。详见[核心接口适配复验](docs/CORE-IMAGE-ADAPTER-64a.md)。
 
 ## 1. 版本与能力边界
 
 | 项目 | 本手册采用的实际值 |
 |---|---|
 | 源码仓库 | [ecommercial-images-designer-skill](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill) |
-| 固定技能内容树 | `4d27005fabe36d5bf19eb4fccda336cc39569ffe`；同版 `release.json.skill_tree` 与此相同；完整源码提交见 `source_commit`／版本标签 |
+| 固定技能内容树 | `bba6068eafac9b65c24ee019df79f00fc2d88ea4`；同版 `release.json.skill_tree` 与此相同 |
+| 完整发行源码提交 | 同版 `release.json.source_commit`／`revision` 均为40位完整Git SHA；对照Release目标和第10节记录，不以本地HEAD或分支名替代 |
 | 技能名称 | `ecommerce-image-designer`；界面显示名“电商图片设计” |
 | 源码中的技能根 | `.agents/skills/ecommerce-image-designer/` |
 | 分发类型 | 单技能目录；MIT 许可证；不是现成的安装器或插件 |
-| 版本标签／Release | [v0.1.2](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.2)，完整发行源码 SHA 见同版 `release.json` 的 `source_commit`；技能内容以独立的固定内容树核对。历史 [v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)保留 |
+| 版本标签／Release | [v0.1.3](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.3)，完整发行源码 SHA 见同版 `release.json` 的 `source_commit`；技能内容以独立的固定内容树核对。历史 [v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)保留 |
 | 指定出图服务 | `zhenzhen-gptimagegen2.5-mcp`、`zhenzhen-nanobanana-mcp`，按任务选择其中一个 |
 
 本版 `release.json` 分别记录完整发行源码提交和技能内容树；成员手册、变更说明独立随包交付，运行 ZIP 仅含下列11文件。本仓库手册会继续更新，既有标签和附件不随之改写；新版本应重新固定源码／运行快照及清单，不能让成员日常自动跟随 `main` 或 `dev`。
@@ -28,10 +31,10 @@
 
 | 环境／层次 | 当前证据及限制 |
 |---|---|
-| Codex Desktop，本机 Windows 项目级技能 | 历史真实会话已发现、读取技能并调用免费 MCP；未取得可靠 Desktop 应用版本号。最新十一文件包没有重新执行完整 Codex 主集。 |
-| Codex CLI，Windows | 历史 `0.153.0`、Desktop 配套 `0.163.0-alpha.11` 及独立修补的 `0.163.0` 有分阶段记录。后者曾完成 12 次免费主集，但当时为旧八文件技能包，不能代替当前包验收。没有要求成员安装独立修补 CLI。 |
-| DeepSeek Harness Desktop `0.2.1-rc.2`，desktop profile | 已实测项目级原生发现和两个 codeproxy 路由：`codeproxy-anthropic/claude-sonnet-5-5`、`codeproxy-openai/gpt-6.1-sol`。最新八项尝试七项正常；原稿 5/7、五份正向编译候选 5/5，两个反例不编译。Sol 显式状态因 overload 未评测，用户已接受该例外。 |
-| Windows CI | 已通过 109 项 Python、15 项 Node 及结构／42 场景格式检查。这些离线检查不调用模型、真实 MCP 或收费出图。 |
+| Codex Desktop，本机 Windows 项目级技能 | 历史真实会话已发现、读取技能并调用免费 MCP；未取得可靠 Desktop 应用版本号。当前Desktop会话没有重新执行完整主集；独立CLI复验不能替代Desktop。 |
+| Codex CLI，Windows | 历史 `0.153.0`、Desktop 配套 `0.163.0-alpha.11` 及独立修补的 `0.163.0` 有分阶段记录。本次独立候选在新十一文件包复验12次，轨迹12/12、原稿8/12、正向待审候选9/9；不改判原稿，不要求成员安装该修补CLI。 |
+| DeepSeek Harness Desktop `0.2.1-rc.2`，desktop profile | 已有项目级原生发现和两个 codeproxy 路由的历史证据：`codeproxy-anthropic/claude-sonnet-5-5`、`codeproxy-openai/gpt-6.1-sol`。最新八项尝试七项正常；原稿 5/7、五份正向编译候选 5/5，两个反例不编译。该历史Sol显式状态因overload未评测且用户接受；当前新版放行复验另见[本轮记录](docs/HOST-RELEASE-aju.md)，不借旧例外替代新结果。 |
+| 本地与 Windows CI | 本地158项Python、15项Node及结构／42场景格式检查；正式发行的PR、main合入和dev同步准确提交CI见同版RELEASE-NOTES／VALIDATION。这些离线检查不替代模型、真实Host或供应商出图。 |
 | 业务出图 | 当前 Skill 的真实商品、完整批准后执行、保存和用户视觉接受仍需业务验收；不能因免费查询或候选编译通过就宣称通过。 |
 
 记录入口：[交付回执](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/DELIVERY.md)、[Codex 历史免费复验](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/SYSTEM-SKILLS-76d7-HOST.md)、[DSH 自动编排复验](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/DSH-ORCHESTRATION-76d81.md)。其他操作系统、Claude Code、DSH 用户级目录、云端路径和团队共享远程 MCP 部署没有在本项目验证，不作为本手册支持分支。
@@ -40,7 +43,7 @@
 
 | 角色 | 负责事项 |
 |---|---|
-| 维护者 | 选择固定提交，制作并发布包、核对清单和摘要；提供手册、版本说明及已知限制；管理升级。团队日常优先使用同一个正式 Release。 |
+| 开发者／维护者 | 在dev改源码、技能和回归；通过PR／CI与评审后固定提交并制作发行包，核对清单摘要、手册及限制。普通成员无需承担这些工作。 |
 | 普通成员／使用者 | 从第 4 节下载正式包、校验和安装；不执行维护者打包命令。确认宿主发现正确来源，再提供商品和图片事实、审阅方案、批准范围及验收产物。 |
 | MCP 管理员 | 按服务自身交付说明配置程序或服务、凭据、网络、费用与文件访问；提供本宿主连接说明和免费查询结果。 |
 
@@ -51,7 +54,7 @@ ecommerce-image-designer/
 ├── SKILL.md
 ├── LICENSE
 ├── agents/openai.yaml
-├── references/
+├── reference/
 │   ├── design-record.md
 │   ├── mcp-adapters.md
 │   ├── planning-and-prompts.md
@@ -63,9 +66,9 @@ ecommerce-image-designer/
     └── compile_design_state.py
 ```
 
-`references/` 是必要资料；`agents/openai.yaml` 目前只有界面元数据，没有自动安装 MCP 的依赖声明。两个 Python 脚本只用于可选的本地状态校验／编译，需 Python 3.10+ 标准库，无第三方包。
+`reference/` 是必要资料；`agents/openai.yaml` 目前只有界面元数据，没有自动安装 MCP 的依赖声明。两个 Python 脚本只用于可选的本地状态校验／编译，需 Python 3.10+ 标准库，无第三方包。
 
-普通成员使用指令和审阅方案不需要安装 Git、uv、Node、Beads 或 Rust。维护者从 Git 打包时需要 Git；开发检查另需 Python 3.12+、uv 和 Node 22+，详见[验证说明](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/VALIDATION.md)。`tests/`、`evals/`、宿主测试编排器和 `patches/` 不属于普通成员的运行包；不要分发 `.beads`、缓存、凭据、客户图片或原始会话。
+普通成员使用指令和审阅方案不需要安装 Git、uv、Node、Beads 或 Rust。开发者从 Git 打包／检查时需要 Git；开发检查另需 Python 3.12+、uv 和 Node 22+，详见[验证说明](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/VALIDATION.md)。`tests/`、`evals/`、宿主测试编排器和 `patches/` 不属于普通成员的运行包；不要分发 `.beads`、缓存、凭据、客户图片或原始会话。
 
 ## 3. 维护者：按固定提交制作分发包
 
@@ -73,46 +76,67 @@ ecommerce-image-designer/
 
 在已经取得上述仓库、并具有所需访问权的**源码根目录**执行以下 PowerShell。获取仓库时可使用其 HTTPS 地址；若需登录，使用既有 Git 凭据机制，不把令牌写入 URL。
 
-此操作只读 Git 对象，在临时新目录写交付文件，不提交、不推送、不发布 Release，也不改变安装或权限。分享最终打印的 `delivery` 子目录，其中有 ZIP、清单、摘要和本手册；旁边的 `staging` 不需分享。
+一次执行下面完整代码块。它只读固定 Git 对象，在仓库内独立的 `.eval-workspaces/package-<随机ID>/` 写交付文件，不提交、不推送、不发布或修改安装权限。中间 staging 在 finally 清理；保留最终打印的 delivery 供审阅与交付。失败时不继续交付，保留本次目录以诊断；归档必要证据和转存交付文件后只清理本次创建的目录。
 
 ```powershell
 # MANUAL:PACKAGE
-$ErrorActionPreference = 'Stop'
-$SkillTree = '4d27005fabe36d5bf19eb4fccda336cc39569ffe'
-$SourceRepo = (git rev-parse --show-toplevel).Trim()
-if ($LASTEXITCODE -ne 0) { throw '请在源码仓库中运行' }
-$SourceCommit = (git -C $SourceRepo rev-parse HEAD).Trim()
-if ($LASTEXITCODE -ne 0) { throw '无法确定源码提交' }
-git -C $SourceRepo cat-file -e ($SkillTree + '^{tree}')
-if ($LASTEXITCODE -ne 0) { throw '本地缺少固定技能内容树；先取得 v0.1.2 源码再打包' }
-$BuildDir = Join-Path ([IO.Path]::GetTempPath()) ('ecommerce-package-' + [guid]::NewGuid().ToString('N'))
-$ReleaseDir = Join-Path $BuildDir 'delivery'
-$StageDir = Join-Path $BuildDir 'staging'
-New-Item -ItemType Directory -Path $ReleaseDir,$StageDir -ErrorAction Stop | Out-Null
-$ZipName = 'ecommerce-image-designer-v0.1.2.zip'
-$ZipPath = Join-Path $ReleaseDir $ZipName
-git -C $SourceRepo -c core.autocrlf=false archive --format=zip --prefix=ecommerce-image-designer/ "--output=$ZipPath" $SkillTree
-if ($LASTEXITCODE -ne 0) { throw '固定快照打包失败' }
-Expand-Archive -LiteralPath $ZipPath -DestinationPath $StageDir -ErrorAction Stop
-$PackagedSkill = Join-Path $StageDir 'ecommerce-image-designer'
-$PackageFiles = @(Get-ChildItem -LiteralPath $PackagedSkill -File -Recurse | Sort-Object FullName)
-if ($PackageFiles.Count -ne 11) { throw '此固定快照应恰好包含11个文件' }
-$ManifestFiles = @($PackageFiles | ForEach-Object {
-    [ordered]@{
-        path = [IO.Path]::GetRelativePath($PackagedSkill, $_.FullName).Replace('\','/')
-        sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+. {
+    $PreviousPackagePreference = $ErrorActionPreference
+    $ErrorActionPreference = 'Stop'
+    $StageDir = $null
+    try {
+        $SkillTree = 'bba6068eafac9b65c24ee019df79f00fc2d88ea4'
+        $SourceCommit = (git rev-parse 'v0.1.3^{commit}').Trim()
+        if ($LASTEXITCODE -ne 0 -or $SourceCommit -notmatch '^[0-9a-f]{40}$') { throw '本地缺少已验证v0.1.3标签；先取得正式标签，不从HEAD推定' }
+        $SourceRepo = (git rev-parse --show-toplevel).Trim()
+        if ($LASTEXITCODE -ne 0) { throw '请在源码仓库中运行' }
+        $SourceTree = (git -C $SourceRepo rev-parse ($SourceCommit + ':.agents/skills/ecommerce-image-designer')).Trim()
+        if ($LASTEXITCODE -ne 0 -or $SourceTree -cne $SkillTree) { throw '缺少或不匹配的固定源码对象；停止打包' }
+        git -C $SourceRepo cat-file -e ($SkillTree + '^{tree}')
+        if ($LASTEXITCODE -ne 0) { throw '本地缺少固定技能内容树；先取得 v0.1.3 源码再打包' }
+        $BuildDir = Join-Path $SourceRepo ('.eval-workspaces/package-' + [guid]::NewGuid().ToString('N'))
+        $ReleaseDir = Join-Path $BuildDir 'delivery'
+        $StageDir = Join-Path $BuildDir 'staging'
+        New-Item -ItemType Directory -Path $ReleaseDir,$StageDir -ErrorAction Stop | Out-Null
+        $ZipName = 'ecommerce-image-designer-v0.1.3.zip'
+        $ZipPath = Join-Path $ReleaseDir $ZipName
+        git -C $SourceRepo -c core.autocrlf=false archive --format=zip --prefix=ecommerce-image-designer/ "--output=$ZipPath" $SkillTree
+        if ($LASTEXITCODE -ne 0) { throw '固定快照打包失败' }
+        Expand-Archive -LiteralPath $ZipPath -DestinationPath $StageDir -ErrorAction Stop
+        $PackagedSkill = Join-Path $StageDir 'ecommerce-image-designer'
+        $PackageFiles = @(Get-ChildItem -LiteralPath $PackagedSkill -File -Recurse | Sort-Object FullName)
+        if ($PackageFiles.Count -ne 11) { throw '此固定快照应恰好包含11个文件' }
+        $ManifestFiles = @($PackageFiles | ForEach-Object {
+            [ordered]@{
+                path = [IO.Path]::GetRelativePath($PackagedSkill, $_.FullName).Replace('\','/')
+                sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            }
+        })
+        $ZipSha = (Get-FileHash -LiteralPath $ZipPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        $Manifest = [ordered]@{
+            skill = 'ecommerce-image-designer'; version = 'v0.1.3'
+            revision = $SourceCommit; source_commit = $SourceCommit; skill_tree = $SkillTree
+            archive = $ZipName; archive_sha256 = $ZipSha; files = $ManifestFiles
+        }
+        $Manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $ReleaseDir 'release.json') -Encoding utf8
+        "$ZipSha  $ZipName" | Set-Content -LiteralPath (Join-Path $ReleaseDir 'SHA256SUMS.txt') -Encoding utf8
+        $ManualZip = Join-Path $StageDir 'manual.zip'
+        git -C $SourceRepo -c core.autocrlf=false archive --format=zip "--output=$ManualZip" $SourceCommit MANUAL.md
+        if ($LASTEXITCODE -ne 0) { throw '无法取得同一固定提交的手册，停止交付' }
+        Expand-Archive -LiteralPath $ManualZip -DestinationPath (Join-Path $StageDir 'manual') -ErrorAction Stop
+        Copy-Item -LiteralPath (Join-Path $StageDir 'manual/MANUAL.md') -Destination (Join-Path $ReleaseDir 'MANUAL.md') -ErrorAction Stop
+        Write-Output $ReleaseDir
+    } finally {
+        try {
+            if ($StageDir -and (Test-Path -LiteralPath $StageDir)) {
+                $OwnedStage = [IO.Path]::GetFullPath($StageDir)
+                $OwnedBuild = [IO.Path]::GetFullPath($BuildDir)
+                if (!$OwnedStage.StartsWith($OwnedBuild + [IO.Path]::DirectorySeparatorChar, [StringComparison]::OrdinalIgnoreCase) -or [IO.Path]::GetFileName($OwnedStage) -ne 'staging') { throw '清理范围不符；保留现场' }
+                Remove-Item -LiteralPath $OwnedStage -Recurse -Force -ErrorAction Stop
+            }
+        } finally { $ErrorActionPreference = $PreviousPackagePreference }
     }
-})
-$ZipSha = (Get-FileHash -LiteralPath $ZipPath -Algorithm SHA256).Hash.ToLowerInvariant()
-$Manifest = [ordered]@{
-    skill = 'ecommerce-image-designer'; version = 'v0.1.2'
-    revision = $SourceCommit; source_commit = $SourceCommit; skill_tree = $SkillTree
-    archive = $ZipName; archive_sha256 = $ZipSha; files = $ManifestFiles
 }
-$Manifest | ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $ReleaseDir 'release.json') -Encoding utf8
-"$ZipSha  $ZipName" | Set-Content -LiteralPath (Join-Path $ReleaseDir 'SHA256SUMS.txt') -Encoding utf8
-Copy-Item -LiteralPath (Join-Path $SourceRepo 'MANUAL.md') -Destination (Join-Path $ReleaseDir 'MANUAL.md') -ErrorAction Stop
-Write-Output $ReleaseDir
 ```
 
 使用 `git archive` 而非当前工作树，避免把未提交改动、配置和临时证据装进去。对子树对象归档时，仓库根目录的 `.gitattributes` 不在归档范围内；命令级 `-c core.autocrlf=false` 防止本机自动换行设置改变文件字节，不修改 Git 配置。不要省略该选项，也不要用编辑器重新保存包内文件后仍沿用旧摘要。正式发布另将包内全部文件与目标 Git 对象逐字节核对。
@@ -123,26 +147,26 @@ Write-Output $ReleaseDir
 
 ### 4.1 下载正式 Release，准备交付目录
 
-1. 用浏览器打开 [v0.1.2 正式 Release](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.2)，在页面下方展开 **Assets**。仓库为公开仓库，普通成员无需 Git 或克隆源码。
-2. 新建一个专门接收本版附件的文件夹。下面以 `D:\Downloads\电商图片设计-v0.1.2` 为例；成员可选择自己电脑上实际存在的其他盘符和位置。
+1. 用浏览器打开 [v0.1.3 正式 Release](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.3)，在页面下方展开 **Assets**。仓库为公开仓库，普通成员无需 Git 或克隆源码。
+2. 新建一个专门接收本版附件的文件夹。下面以 `D:\Downloads\电商图片设计-v0.1.3` 为例；成员可选择自己电脑上实际存在的其他盘符和位置。
 3. 将以下四个文件下载到该文件夹，不要先解压 ZIP：
 
 | 必需文件 | 下载入口／作用 |
 |---|---|
-| `ecommerce-image-designer-v0.1.2.zip` | [技能运行包](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.2/ecommerce-image-designer-v0.1.2.zip)，包含完整十一文件 |
-| `release.json` | [版本与文件清单](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.2/release.json) |
-| `SHA256SUMS.txt` | [附件摘要清单](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.2/SHA256SUMS.txt) |
-| `MANUAL.md` | [本版随包手册](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.2/MANUAL.md) |
+| `ecommerce-image-designer-v0.1.3.zip` | [技能运行包](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.3/ecommerce-image-designer-v0.1.3.zip)，包含完整十一文件 |
+| `release.json` | [版本与文件清单](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.3/release.json) |
+| `SHA256SUMS.txt` | [附件摘要清单](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.3/SHA256SUMS.txt) |
+| `MANUAL.md` | [本版随包手册](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.3/MANUAL.md) |
 
 另外建议下载同一 Assets 中的 `CHANGELOG.md`、`RELEASE-NOTES.md`、`VALIDATION.json`，了解变更、限制和验证证据。**不要选择 `Source code (zip)` 或 `Source code (tar.gz)`；它们是源码归档，不是本流程使用的技能运行包。** 维护者也可把同一 Release 的附件原样放到团队共享盘，成员整套领取。
 
-下载的 `MANUAL.md` 是 v0.1.2 冻结的手册。请按其中第4.2、4.3节完整代码块执行；不要切回 v0.1.0 随包旧手册的逐行流程。
+下载的 `MANUAL.md` 是 v0.1.3 冻结的手册。请按其中第4.2、4.3节完整代码块执行；不要切回 v0.1.0 随包旧手册的逐行流程。
 
 正确的“交付目录”是**直接装着这些文件的文件夹**：
 
 ```text
-D:\Downloads\电商图片设计-v0.1.2\
-├── ecommerce-image-designer-v0.1.2.zip
+D:\Downloads\电商图片设计-v0.1.3\
+├── ecommerce-image-designer-v0.1.3.zip
 ├── release.json
 ├── SHA256SUMS.txt
 └── MANUAL.md
@@ -150,7 +174,7 @@ D:\Downloads\电商图片设计-v0.1.2\
 
 它是下载附件的位置；后续安装时会另外选择业务项目。空文件夹、ZIP 解压后的 `ecommerce-image-designer` 文件夹都不能作为交付目录。若维护者提供的是本地打包结果，应选择其 `delivery` 子目录，旁边的 `staging` 不用于成员验证。
 
-在资源管理器打开这个文件夹，按 **Ctrl+L** 选中地址栏，按 **Ctrl+C** 复制完整路径。粘贴到提示中可以带英文双引号，例如 `"D:\Downloads\电商图片设计-v0.1.2"`；下面的命令会自动去掉双引号和首尾空白，保留路径内部空格。
+在资源管理器打开这个文件夹，按 **Ctrl+L** 选中地址栏，按 **Ctrl+C** 复制完整路径。粘贴到提示中可以带英文双引号，例如 `"D:\Downloads\电商图片设计-v0.1.3"`；下面的命令会自动去掉双引号和首尾空白，保留路径内部空格。
 
 ### 4.2 填写摘要并一次完成验证
 
@@ -163,17 +187,17 @@ D:\Downloads\电商图片设计-v0.1.2\
 | 交付目录 | 上一节四文件所在目录的完整路径；不是 ZIP 文件路径，也不是准备安装技能的业务项目目录 |
 | ZIP SHA256 | 这一份 ZIP 在可信 Release 通知或维护者通知中的64位摘要；只填摘要，不带文件名、`sha256:`、引号或 Git 提交号 |
 
-**从上面 v0.1.2 正式入口下载的 ZIP，填写下列值：**
+**从上面 v0.1.3 正式入口下载的 ZIP，填写下列值：**
 
 ```text
-ac805326f2650dcfeea8d9d71f0e817f069d9029998708d7f90dbdf1d7af6882
+b0ab3745fb269db7e667132ed899941001e4e26a169c70f4b51044f6e463ae8a
 ```
 
 维护者自行重新打包的 ZIP 即使运行文件相同，归档摘要也可能不同，必须用维护者对**那份本地包**给出的摘要。不能混用两份包的 ZIP、清单和摘要，也不要自行计算一个值再当作可信发布通知。无需输入任何 API 密钥。
 
 下面会先检查目录和必需文件，再询问摘要；仅在 ZIP、清单及十一文件全部通过后打印成功。验证直接读取 ZIP，不创建临时解压目录，不覆盖技能。**任一步失败都会终止本块并清空旧验证结果；不要单独执行最后的成功提示。** 修正问题后重新执行完整验证块。
 
-v0.1.2 更新了技能运行内容，ZIP 名称和摘要均已变化。ZIP、`release.json` 和手册必须从 v0.1.2 一起下载；不要沿用 v0.1.0／v0.1.1 的 ZIP 或摘要。旧标签和附件保留历史版本，不覆盖更新。
+v0.1.3 更新了技能运行内容，ZIP 名称和摘要均已变化。ZIP、`release.json` 和手册必须从 v0.1.3 一起下载；不要沿用 v0.1.0／v0.1.1 的 ZIP 或摘要。旧标签和附件保留历史版本，不覆盖更新。
 
 ```powershell
 # MANUAL:VERIFY
@@ -191,7 +215,8 @@ v0.1.2 更新了技能运行内容，ZIP 名称和摘要均已变化。ZIP、`re
             if (!(Test-Path -LiteralPath (Join-Path $DeliveryDir $RequiredFile) -PathType Leaf)) { throw "交付目录缺少 $RequiredFile；请下载同一Release的四个必需文件，勿选择空目录或解压目录" }
         }
         $Release = Get-Content -Raw -LiteralPath (Join-Path $DeliveryDir 'release.json') | ConvertFrom-Json
-        if ($Release.skill -ne 'ecommerce-image-designer' -or $Release.version -ne 'v0.1.2' -or $Release.skill_tree -ne '4d27005fabe36d5bf19eb4fccda336cc39569ffe') { throw '技能名称或固定版本不符' }
+        if ($Release.skill -ne 'ecommerce-image-designer' -or $Release.version -ne 'v0.1.3' -or $Release.skill_tree -ne 'bba6068eafac9b65c24ee019df79f00fc2d88ea4') { throw '技能名称或固定版本不符' }
+        if ($Release.source_commit -notmatch '^[0-9a-f]{40}$' -or $Release.revision -cne $Release.source_commit) { throw '清单的完整源码提交非法或不一致' }
         if ([string]::IsNullOrWhiteSpace($Release.archive) -or $Release.archive -match '[/\\:]' -or [IO.Path]::GetFileName($Release.archive) -cne $Release.archive) { throw '清单中的压缩包名称非法' }
         $ReceivedZip = Join-Path $DeliveryDir $Release.archive
         if (!(Test-Path -LiteralPath $ReceivedZip -PathType Leaf)) { throw "缺少技能ZIP：$($Release.archive)；请下载后再验证，不要先解压" }
@@ -289,6 +314,18 @@ v0.1.2 更新了技能运行内容，ZIP 名称和摘要均已变化。ZIP、`re
 
 **DeepSeek Harness Desktop 0.2.1-rc.2：** 选择 `desktop` profile，在该业务目录建立会话，要求“使用 ecommerce-image-designer 技能”。验证原生技能列表返回的入口和实际读取来源。模型可选管理员已配置的 `codeproxy-anthropic/claude-sonnet-5-5` 或 `codeproxy-openai/gpt-6.1-sol`；本次模型路由证据不独立认证网关背后的模型身份。不要据 Codex 目录规则推断 DSH 的用户级位置，也不要用 npm/headless 测试代替 Desktop 验收。无需为普通使用开启 Inspector；那是维护者测试编排的既有诊断通道。
 
+### 4.5 发现位置与作用域核对
+
+下表据本仓库新版规范整理，记录路径语义，**不是本轮重新运行各宿主的证明**。本文可执行安装仍只部署项目级 `.agents/skills/ecommerce-image-designer/`；选择其他位置需另验收，不改 Host 配置来强行发现。
+
+| 宿主 | 父目录与发现范围 | 本项目证据边界 |
+|---|---|---|
+| Codex CLI／Desktop | 从会话 cwd 到仓库根各层 `.agents/skills/`；用户级为实际运行用户的 `~/.agents/skills/`。不向下发现所有兄弟项目。 | 项目级有历史记录；新版迁移目录与当前版本的完整行为复验待做。 |
+| DSH 本地文件系统提供方 | 最近 `.git` 决定 projectRoot，否则为 cwd；项目 `.dsh/skills/` 与 `.agents/skills/`，用户默认 `~/.dsh/skills/`、`~/.agents/skills/`，受实际根配置和提供方开关影响。 | 只有 Desktop 0.2.1-rc.2、desktop profile 的项目级历史证据；用户级／自定义目录未实测。 |
+| Claude Code | `.claude/skills/`；不会因目录名 `.agents/skills/` 自动获得相同发现行为。 | 本项目尚未实测，不提供可用性承诺或默认部署命令。 |
+
+DSH 需已有 `@deepseek-ai/dsh-skill` 和 `@deepseek-ai/dsh-skill-filesystem`；`includeDefaultRoots: false` 可禁用默认根，`customSkillDirs`、DSH_HOME、DSH_AGENTS_HOME 及显式配置可改变实际位置，profile 名不是目录。先查宿主诊断中的有效根、入口路径、scope 与同名来源；注册表 rank 不等于跨宿主通用覆盖顺序，不通过删除其他技能消除冲突。DSH 的监视刷新和 Codex 的新会话／刷新分别核对；不能以一个 Host 的热加载推断全部可用。Windows、WSL、SSH、云端各有独立文件系统与运行用户，不能直接复用客户端盘符。
+
 ## 5. MCP 准备与费用
 
 Skill 本身没有 API Key、`.env` 或服务端点字段，不需要在聊天里填密钥。两个 MCP 的程序、模型、凭据和网络配置由服务管理员按**各服务自己的安装说明**准备，本仓库不分发它们的后端安装包或通用配置模板。
@@ -302,7 +339,7 @@ Skill 本身没有 API Key、`.env` 或服务端点字段，不需要在聊天�
 
 宿主可能把 GPT 服务命名为 `zhenzhen-gptimagegen2-5-mcp`，也可能将工具名转换为命名空间形式；先看当前工具 schema，不照抄某个宿主的完整前缀。目录／配置查询成功不证明上游生成、速度或质量已验证。免费验收不需要实际出图；模型推理及服务部署可能有各自费用，本文的“免费”指不调用收费图像生成。
 
-只做文字策划时可先不连接服务；缺少图片查看能力时要明确未观图，不能补写视觉结论。出图时核对所选服务确实支持输入、尺寸和产物获取。远端 Server 通常读不到成员本机附件路径，需先确认允许的传递方式，不静默传到第三方图床。详细限制见[本快照 MCP 适配说明](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/v0.1.2/.agents/skills/ecommerce-image-designer/references/mcp-adapters.md)；离线副本为安装目录中的 `references/mcp-adapters.md`。Nano/GPT 均由 Skill 先完成策划和逐图确认，再调用核心生成／批量工具，扩展资源或模板不是前提。收费授权、图片映射和失败恢复仍按档案核对。
+只做文字策划时可先不连接服务；缺少图片查看能力时要明确未观图，不能补写视觉结论。出图时核对所选服务确实支持输入、尺寸和产物获取。远端 Server 通常读不到成员本机附件路径，需先确认允许的传递方式，不静默传到第三方图床。详细限制见[本快照 MCP 适配说明](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/v0.1.3/.agents/skills/ecommerce-image-designer/reference/mcp-adapters.md)；离线副本为安装目录中的 `reference/mcp-adapters.md`。Nano/GPT 均由 Skill 先完成策划和逐图确认，再调用核心生成／批量工具，扩展资源或模板不是前提。收费授权、图片映射和失败恢复仍按档案核对。
 
 ## 6. 第一次免费验收与日常调用
 
@@ -358,7 +395,7 @@ P01 是我提供的商品实拍；R01 是竞品参考，仅借鉴字体与配色
 
 确认时应指明刚展示的版本和图号，并覆盖费用范围，例如“按刚展示的 v2 生成 M02，使用已列出的模型、输入和参数；同意本次已说明的费用范围，其他图保持不变”。这只是确认表达示例，不是当前对任何商品的授权。看完实际方案和费用再发送；服务／模型、输入或预算范围变化时重新展示差异。
 
-v0.1.2 中，用户确认和费用授权由 Skill 逐图保存，Nano／GPT 直接调用核心任务接口；只确认 M01 就只执行 M01。批量提交按已批准范围拆批，不需要将其余待定图置为 approved，也不依赖服务端确认、复刻编译或评审工具。
+v0.1.3 中，用户确认和费用授权由 Skill 逐图保存，Nano／GPT 直接调用核心任务接口；只确认 M01 就只执行 M01。批量提交按已批准范围拆批，不需要将其余待定图置为 approved，也不依赖服务端确认、复刻编译或评审工具。
 
 ### 按反馈回退与恢复
 
@@ -386,7 +423,7 @@ python -X utf8 -B (Join-Path $InstalledSkill 'scripts/validate_design_state.py')
 if ($LASTEXITCODE -ne 0) { throw '原稿校验失败；保留错误，不提交绘图' }
 ```
 
-证据由维护者／编排方从用户原话、实际档案与真实工具返回独立整理，形状见随包 `references/state-contract.md`；普通成员无需填写技术证据表。不能复制模型 state 充当证据。校验退出0仅代表结构与绑定通过，退出1保留失败，不证明审美、事实来源本身或用户已批准。
+证据由维护者／编排方从用户原话、实际档案与真实工具返回独立整理，形状见随包 `reference/state-contract.md`；普通成员无需填写技术证据表。不能复制模型 state 充当证据。校验退出0仅代表结构与绑定通过，退出1保留失败，不证明审美、事实来源本身或用户已批准。
 
 原稿失败但能构造合法新候选时，维护者可单独运行编译器；它只读本地输入，不调用模型或 MCP，拒绝覆盖已有输出：
 
@@ -452,8 +489,16 @@ Write-Output "备份已保留：$BackupDir"
 
 如需维护源码，使用[共用检查入口](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/scripts/check.ps1)及[验证手册](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/VALIDATION.md)，沿用分支→PR→必需CI／评审→合并后复验的流程；不把源码提交当成已发布安装包。发布通知应附固定 SHA、11文件清单、ZIP摘要、手册、变更与限制；需要市场插件或统一自动编排时另做适配和验证。
 
-本手册编写会话只核对分发／安装命令及文档，不为团队实际安装、不发布包、不重新调用模型、MCP 或收费出图。新的成员环境、业务生成与视觉验收按上述步骤分别记录。
+本手册安装流程只操作成员选定的业务目录，不部署后端、改Host配置或触发收费出图。本版维护者发布前的真实Host免费复验与发行验证分别记录在同版VALIDATION／RELEASE-NOTES；不能由安装命令成功推断成员业务验收通过。
 
 初版手册编写时已在隔离临时目录实际验证固定快照打包、11文件摘要、中文／空格路径安装、重复安装拒绝、错误ZIP／文件摘要拒绝，以及限定目录备份、同快照重装／恢复和移出式卸载；合成用户文件保留。所有PowerShell代码块另作语法检查。这不等于真实成员宿主发现、跨版本数据迁移或业务出图验收。
 
-本轮成员流程修复新增15项Windows PowerShell工作流回归：真实执行本手册代码块，检查缺清单、坏JSON、缺ZIP、摘要错误、坏ZIP、ZIP结构错误、旧验证结果失效、未验证／ZIP变更后安装拒绝、同名目录和联接保护、双引号清洗及同快照备份恢复。语法树另核对验证／安装各自只有一个完整提交语句；本地共124 Python、15 Node及结构／场景格式检查通过。重新下载正式v0.1.0包验证带引号中文空格目录、十一文件安装摘要与合成用户数据保留，所有本轮临时环境已移除。没有新增模型、图像MCP或收费出图调用，没有改变已有安装配置或已发布附件；旧Release手册保持历史版本，不能据本地检查声称已更新远端CI或发行物。
+历史v0.1.1成员流程修复新增15项Windows PowerShell工作流回归：真实执行本手册代码块，检查缺清单、坏JSON、缺ZIP、摘要错误、坏ZIP、ZIP结构错误、旧验证结果失效、未验证／ZIP变更后安装拒绝、同名目录和联接保护、双引号清洗及同快照备份恢复。语法树另核对验证／安装各自只有一个完整提交语句；本地共124 Python、15 Node及结构／场景格式检查通过。重新下载正式v0.1.0包验证带引号中文空格目录、十一文件安装摘要与合成用户数据保留，所有本轮临时环境已移除。没有新增模型、图像MCP或收费出图调用，没有改变已有安装配置或已发布附件；旧Release手册保持历史版本，不能据本地检查声称已更新远端CI或发行物。
+
+## 11. 从旧版升级与团队维护
+
+v0.1.3 将旧 `references/` 迁移为单数 `reference/`，入口直接索引六份资料和两个可选脚本，仍共11文件，无新必需依赖。不能只改文件夹名、只替换SKILL.md或手册：入口、参考资料、脚本和清单必须取同一新版本完整包，不能混用旧ZIP／摘要。
+
+旧用户先按第8节记录来源、备份完整旧包及本地定制，再用本版四附件完整校验并安装到空目标，核对宿主实际选用来源和第6节免费验收；失败保留备份，整包回滚。用户商品图、设计档案、已生成图片、Host／MCP配置和其他技能均保留。旧版读取新版状态是否兼容另行核查，不能靠源码回滚假装数据可逆。
+
+团队共享来源是本仓库的已验证Release，不跟随dev/main自动更新。成员提出改进时提供版本、脱敏样例、预期与实际证据；开发者在dev修改正文／资源／脚本和回归，经PR、必需CI、维护者评审、合入复验后受控发布。个人实验不覆盖正式安装，通用改进回流共享库。技能文本和检查器不提供独立沙箱，也不替代用户方案与费用确认。

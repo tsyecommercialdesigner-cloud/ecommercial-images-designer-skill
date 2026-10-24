@@ -6,9 +6,11 @@
 
 团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
 
-普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装；第3节打包仅供维护者。本仓库手册已修复交互执行时的失败后假成功，并支持带双引号的目录输入；v0.1.1 随包手册包含这些修复，v0.1.0 保留为历史版本。
+普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装；第3节打包仅供维护者。本仓库手册已修复交互执行时的失败后假成功，并支持带双引号的目录输入；v0.1.2 随包手册包含这些修复，v0.1.0 保留为历史版本。
 
-修正版发行：[v0.1.1](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.1)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。准确标签、七附件摘要及发布复验见 [v0.1.1 发布回执](docs/RELEASE-v0.1.1.md)。技能运行包沿用 v0.1.0 的已验证字节；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
+修正版发行：[v0.1.2](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.2)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。发布源码及 CI 记录见同版 `RELEASE-NOTES.md`。技能运行包采用新的固定内容树和 ZIP 摘要；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
+
+v0.1.2 由 Skill 自行策划、文案排版与提示词，确认后直连两个 MCP 的核心生成／批量工具；不依赖服务端策划、复刻编译、resources 或 prompt 模板，见[适配与免费回归记录](docs/CORE-IMAGE-ADAPTER-64a.md)。旧 v0.1.0／v0.1.1 保留，成员升级需取得 v0.1.2 的完整技能包，不能只替换手册。
 
 ## 使用
 

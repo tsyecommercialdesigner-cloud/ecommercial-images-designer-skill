@@ -50,9 +50,9 @@ class BehaviorHarnessTests(unittest.TestCase):
 
     def test_preserved_second_panel_survives_guard(self):
         call={'service':'nano','name':'plan_ecommerce_design','arguments':{'edits':[{'panel_id':'p01','headline':'new'},{'panel_id':'p02','headline':'用户已定稿的M02标题','layout':'用户已定稿的左图右文布局'}]}}
-        self.assertFalse(grader.mechanical('E34',[call]))
+        self.assertFalse(grader.mechanical('E34',[call],rubric_version='1.0'))
         call['arguments']['edits'].pop()
-        self.assertTrue(grader.mechanical('E34',[call]))
+        self.assertTrue(grader.mechanical('E34',[call],rubric_version='1.0'))
 
     def test_unrun_cases_cannot_pass(self):
         result=summary.summarize([], [{'id':'E01'}])

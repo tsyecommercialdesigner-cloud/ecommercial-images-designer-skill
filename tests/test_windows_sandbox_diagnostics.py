@@ -91,8 +91,20 @@ class WindowsPolicyDiagnosticsTests(unittest.TestCase):
         query = self.query.replace(
             "Microsoft.PowerShell.Security.psd1", "Missing76d.psd1"
         )
-        proc = self.run_query(query)
+        # This case tests error/context propagation, not discovery across the
+        # runner's unrelated global module catalog. Missing-module resolution in
+        # Windows PowerShell 5.1 can enumerate that inherited catalog and exceed
+        # the bounded subprocess timeout on Windows CI. Keep the real import
+        # failure and the 30s limit, with the same OS-only path used by the test
+        # above; production policy/query code and machine configuration stay intact.
+        env = os.environ.copy()
+        env['PSModulePath'] = str(self.shell.parent / 'Modules')
+        # Windows PowerShell appends default global entries during startup;
+        # restrict discovery inside this child after that initialization.
+        query = '$env:PSModulePath = $PSHOME + "\\Modules"; ' + query
+        proc = self.run_query(query, env)
         self.assertEqual(proc.returncode, 1, proc.stderr)
+        self.assertIn('modulePath=' + env['PSModulePath'], proc.stderr)
         self.assertFalse(proc.stdout.strip(), proc.stdout)
         for marker in ("identity=", "psHome=", "modulePath=", "Missing76d.psd1"):
             self.assertIn(marker, proc.stderr)

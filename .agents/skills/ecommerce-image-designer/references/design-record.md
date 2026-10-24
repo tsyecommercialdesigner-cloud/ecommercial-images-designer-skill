@@ -79,15 +79,15 @@
 | `confirmation_evidence` | 用户原话与消息位置；未确认时为空，不允许 Agent 自填同意。 |
 | `execution_authorization` | 是否要求提交、本次使用的服务、收费授权或已覆盖的预算／范围及依据。 |
 | `invalidated_scope` | 新资料、图片内容、文案、布局、提示词或生成参数修改后，哪些确认已失效。 |
-| `server_snapshot` | 若服务有策划器，记录服务的 design_id、revision、digest 与导出方案。 |
-| `server_panel_map` | 用户图号与实际 panel_id／task_id 的映射；如 M01→p01，不能把业务图号直接猜成服务图号。 |
-| `approval_scope` / `submission_scope` | 服务确认覆盖哪些图、此次实际执行哪些图；两者分别记录，提交集合必须属于合法批准集合。 |
+| `server_snapshot` | 保留历史服务 design_id／revision／digest 以便追溯；当前新任务只保存核心请求与实际任务身份，不依赖服务端策划。 |
+| `server_panel_map` | 用户图号与本轮冻结 task_id／幂等键的映射；旧 panel_id 原样保留用于追溯。新 Nano 核心任务示例 M01→v3-M01，GPT 各图分别绑定提交键与返回ID。 |
+| `approval_scope` / `submission_scope` | Skill中用户实际批准哪些图、此次执行哪些图；提交集合必须属于用户批准和费用授权覆盖的集合。 |
 
-业务层可先确认部分图并只生成该部分，但必须符合服务批准粒度。Nano Banana 的确认覆盖整个当前版本，不接受 panel_ids；只批准一部分时，不能将整个版本置为 approved。先把执行部分构造成服务支持的独立方案并展示确认，或经用户同意采用另一指定服务；不能因模板强制完整组图而添加未请求图或虚假 SKU。整版已确认后，可用 panel_ids 分批执行获准的部分。
+可先确认部分图并只为这些图构造核心生成任务，逐图保存确认和费用授权。未确认图不得混入提交；批量接口的图数上限只影响分批，不改变用户批准范围。
 
 一个确认只对展示过的内容有效。新版本保留未受影响的约束与产物，但不能冒用旧服务 revision/digest 提交新方案。共享 style 的变更使其所有关联图的视觉确认受影响；如果用户要求保留旧图，记录保留它们属于旧视觉组，不声称新旧混合是一套已经验证一致的新版本。
 
-每次改稿保留完整 brief、全部定稿逐图字段和原计划类型。普通 Nano Banana plan 会从 brief 重新构建所有默认图，故需传全部保留的 PanelCopy edits，而不只传本次改变的图。suite／reference_replica 更新完整 style/frames，不能用普通 edits。逐版比较全部 panels，发现非预期回退先修正，不提交。
+每次改稿保留产品事实、来源、全部定稿文案和排版、完整提示词及图片映射，仅更新被点名图。共享规范改动列出关联图和新增确认范围，冻结旧图保留旧组；不依赖服务端 brief／suite／reference_replica 重建方案。旧 Server 档案原样保留，任务未知时先按原核心任务身份查询，不换键重提。
 
 ## 任务与验收台账
 

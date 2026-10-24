@@ -16,7 +16,7 @@ class MockProtocolTests(unittest.TestCase):
         self.root=Path(self.temp.name)/'E33-r1'
         mock.seed_workspace(self.root,'只有 M01 获准，其余待定','E33')
         self.skill=Path(__file__).resolve().parents[1]/'.agents/skills/ecommerce-image-designer'
-        self.nano=mock.MockServer('nano',self.root,self.skill)
+        self.nano=mock.MockServer('nano',self.root,self.skill,legacy=True)
 
     def test_protocol_discovery(self):
         self.assertEqual(self.nano.handle({'method':'initialize','params':{'protocolVersion':'2024-11-05'}})['protocolVersion'],'2024-11-05')
@@ -66,7 +66,7 @@ class MockProtocolTests(unittest.TestCase):
     def test_review_requires_real_six_dimensions_and_current_file(self):
         self.root=Path(self.temp.name)/'E36-r1'
         mock.seed_workspace(self.root,'复刻结果待验收','E36')
-        nano=mock.MockServer('nano',self.root,self.skill)
+        nano=mock.MockServer('nano',self.root,self.skill,legacy=True)
         args=dict(design_id='fixture-design',revision=3,task_id='T1',image_sha256=nano.media('G01')['sha256'],assessment={key:dict(status='pass',evidence='fixture observation') for key in mock.REVIEW_KEYS})
         self.assertEqual(nano.call('review_reference_replica',args)['outcome'],'agent_passed')
         args['assessment']['text_accuracy']=dict(status='uncertain',evidence='no visible glyphs',correction='check approved copy')
@@ -89,8 +89,10 @@ class MockProtocolTests(unittest.TestCase):
     def test_nano_approved_variant_keeps_plan_gate_and_task_namespace(self):
         root=Path(self.temp.name)/'E11-r1'
         mock.seed_workspace(root,'完整单图版已确认，尚未提交','E11',variant='nano-approved')
-        nano=mock.MockServer('nano',root,self.skill)
+        nano=mock.MockServer('nano',root,self.skill,legacy=True)
         self.assertEqual(nano.call('get_ecommerce_design',{'design_id':'fixture-design'})['tasks'],[])
+        # Historical v1 fixture: current core-only seed intentionally has no server plan.
+        nano.design['brief']['reference_replica']={'scope':'series'}
         export=nano.call('export_validated_reference_replica',{'design_id':'fixture-design'})
         self.assertEqual([i['role'] for i in export['prompts'][0]['input_images']],['style_only','product_identity'])
         args=dict(design_id='fixture-design',revision=3,digest='a'*64,panel_ids=['p01'],authorize_paid=True)

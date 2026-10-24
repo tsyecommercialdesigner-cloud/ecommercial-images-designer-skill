@@ -14,6 +14,60 @@ import dsh_postprocess_trial as pipeline
 
 
 class PostprocessTests(unittest.TestCase):
+    def test_trusted_new_target_replaces_model_input_identity_without_regrading_raw(self):
+        parent = REPO / '.eval-workspaces'
+        parent.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=parent) as temp:
+            root = Path(temp)
+            name, work, raw = self.prepare(root, 'implicit')
+            raw['next']['confirm_images'] = ['P01']
+            answer = work / 'answer.txt'
+            answer.write_text(json.dumps(raw), encoding='utf-8')
+            original = answer.read_bytes()
+            manifest = json.loads((root / 'run.json').read_text())
+            manifest['designTargets'] = {name: ['M01']}
+            (root / 'run.json').write_text(json.dumps(manifest))
+            report = pipeline.process_trial(root, name)
+            self.assertTrue(report['pipeline_passed'], report)
+            self.assertFalse(report['raw_passed'])
+            self.assertEqual(answer.read_bytes(), original)
+            candidate = json.loads((root / 'postprocessing' / name / 'state.json').read_text())
+            self.assertEqual(candidate['next']['confirm_images'], ['M01'])
+            self.assertEqual(candidate['next']['execution'], 'not_authorized')
+
+    def test_trusted_target_still_rejects_input_identity_collision(self):
+        parent = REPO / '.eval-workspaces'
+        parent.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=parent) as temp:
+            root = Path(temp)
+            name, work, raw = self.prepare(root, 'implicit')
+            manifest = json.loads((root / 'run.json').read_text())
+            manifest['designTargets'] = {name: ['P01']}
+            (root / 'run.json').write_text(json.dumps(manifest))
+            report = pipeline.process_trial(root, name)
+            self.assertFalse(report['pipeline_passed'])
+            self.assertIn('independently allocated', report['error'])
+            self.assertFalse((root / 'postprocessing' / name / 'state.json').exists())
+
+    def test_replay_writes_new_candidate_without_overwriting_original_failure(self):
+        parent = REPO / '.eval-workspaces'
+        parent.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=parent) as temp:
+            source = Path(temp) / 'source'
+            name, work, raw = self.prepare(source, 'implicit')
+            raw['next']['confirm_images'] = ['P01']
+            (work / 'answer.txt').write_text(json.dumps(raw), encoding='utf-8')
+            failed = pipeline.process_trial(source, name)
+            self.assertFalse(failed['pipeline_passed'])
+            original = {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if p.is_file()}
+            output = Path(temp) / 'new-replay'
+            corrected = pipeline.process_trial(source, name, output_root=output, target_images=['M01'])
+            self.assertTrue(corrected['pipeline_passed'], corrected)
+            self.assertFalse(corrected['raw_passed'])
+            self.assertEqual(original, {p.relative_to(source): p.read_bytes() for p in source.rglob('*') if p.is_file()})
+            with self.assertRaisesRegex(ValueError, 'separate'):
+                pipeline.process_trial(source, name, output_root=source / 'overwrite')
+
     def prepare(self, root, case='recovery'):
         name = 'sol-' + case + '-r1'
         work = root / name

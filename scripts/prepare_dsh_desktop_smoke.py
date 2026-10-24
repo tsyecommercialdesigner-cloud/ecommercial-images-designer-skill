@@ -65,7 +65,11 @@ def main():
         contract_module = importlib.util.module_from_spec(contract_spec)
         contract_spec.loader.exec_module(contract_module)
         output_contract = contract_module.CONTRACT_ID
+    # The request asks for one NEW main image. Allocate its stable identity in
+    # trusted orchestration, independently of input P01/R01 and the model answer.
+    design_targets = {f'{model}-implicit-r1': ['M01'] for model in ('sonnet', 'sol')}
     (root / 'before.json').write_text(json.dumps(dict(skill_manifest=manifest, configuration_sha256=preserve,
+                                                  design_targets=design_targets,
                                                   orchestrator_manifest=orchestrator_manifest, output_contract=output_contract), indent=2), encoding='utf-8')
     print(root)
 

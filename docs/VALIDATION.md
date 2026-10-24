@@ -1,5 +1,7 @@
 # 本地验证与覆盖边界
 
+v0.1.3发行前新增[真实Host与确定性重放记录](HOST-RELEASE-aju.md)：161 Python／15 Node，普通权限沙箱及16项安装MCP契约检查通过；Codex修复批12次、DSH8次与独立重放分别记分，不以候选成绩改判原稿。
+
 当前开发树按新版规范改造的范围、基线、失败与复验见 [本轮对照报告](STANDARDS-ALIGNMENT-g2i.md)。以下按日期保留历次结果，旧数量、摘要和 Host 成绩不表示当前树已通过相同实测。
 
 76d.8.1已由用户接受overload覆盖例外后关闭，原失败及评分保持不变。交付检查入口scripts/check.ps1现同时运行Python和离线Node测试；Node22+、标准库，无npm依赖，Windows CI使用runner现有Node并在日志记录实际版本。DSH_TEST_PYTHON仅在检查子进程期间指向uv既有环境并恢复原值，不运行真实宿主或收费出图。新增setup-node的准备方案因OAuth缺workflow scope而撤回，历史拒绝及修复提交保留。

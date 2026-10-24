@@ -38,6 +38,7 @@ const manifest={runtime,routes,cases:Object.keys(cases),repeats:1,workers:2,orig
   gatePolicy:{version:2,hostDiscovery:['list_agents'],teamMutationAllowed:false},
   previousDefault:catalog.default,skillManifest:before.skill_manifest,
   outputContract:before.output_contract??(before.skill_manifest['.agents/skills/ecommerce-image-designer/scripts/validate_design_state.py']?'ecommerce-design-state/v1':null),
+  designTargets:before.design_targets??{},
   lifecycleVersion:1,postprocessingVersion:1,orchestratorManifest:before.orchestrator_manifest,
   python,runtimeAgentsBefore,results:[]};
 await writeFile(join(root,'run.json'),JSON.stringify(manifest,null,2),{flag:'wx'});

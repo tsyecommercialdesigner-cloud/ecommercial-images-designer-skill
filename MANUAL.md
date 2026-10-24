@@ -33,8 +33,8 @@
 |---|---|
 | Codex Desktop，本机 Windows 项目级技能 | 历史真实会话已发现、读取技能并调用免费 MCP；未取得可靠 Desktop 应用版本号。当前Desktop会话没有重新执行完整主集；独立CLI复验不能替代Desktop。 |
 | Codex CLI，Windows | 历史 `0.153.0`、Desktop 配套 `0.163.0-alpha.11` 及独立修补的 `0.163.0` 有分阶段记录。本次独立候选在新十一文件包复验12次，轨迹12/12、原稿8/12、正向待审候选9/9；不改判原稿，不要求成员安装该修补CLI。 |
-| DeepSeek Harness Desktop `0.2.1-rc.2`，desktop profile | 已有项目级原生发现和两个 codeproxy 路由的历史证据：`codeproxy-anthropic/claude-sonnet-5-5`、`codeproxy-openai/gpt-6.1-sol`。最新八项尝试七项正常；原稿 5/7、五份正向编译候选 5/5，两个反例不编译。该历史Sol显式状态因overload未评测且用户接受；当前新版放行复验另见[本轮记录](docs/HOST-RELEASE-aju.md)，不借旧例外替代新结果。 |
-| 本地与 Windows CI | 本地158项Python、15项Node及结构／42场景格式检查；正式发行的PR、main合入和dev同步准确提交CI见同版RELEASE-NOTES／VALIDATION。这些离线检查不替代模型、真实Host或供应商出图。 |
+| DeepSeek Harness Desktop `0.2.1-rc.2`，desktop profile | 两个既有codeproxy模型在本版完成8项真实场景：原稿6/8，原自动流程7/8；独立图号分配修复后，同一冻结答卷确定性重放六份正向候选6/6、两个反例不编译。原稿和原流程成绩不改判；日常Host没有自动编译Hook。详见[本轮记录](docs/HOST-RELEASE-aju.md)。 |
+| 本地与 Windows CI | 本地161项Python、15项Node及结构／42场景格式检查；正式发行的PR、main合入和dev同步准确提交CI见同版RELEASE-NOTES／VALIDATION。这些离线检查不替代模型、真实Host或供应商出图。 |
 | 业务出图 | 当前 Skill 的真实商品、完整批准后执行、保存和用户视觉接受仍需业务验收；不能因免费查询或候选编译通过就宣称通过。 |
 
 记录入口：[交付回执](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/DELIVERY.md)、[Codex 历史免费复验](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/SYSTEM-SKILLS-76d7-HOST.md)、[DSH 自动编排复验](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/blob/0be00e0b8837e9f06633ce5b7504f14bfa711992/docs/DSH-ORCHESTRATION-76d81.md)。其他操作系统、Claude Code、DSH 用户级目录、云端路径和团队共享远程 MCP 部署没有在本项目验证，不作为本手册支持分支。
@@ -423,7 +423,7 @@ python -X utf8 -B (Join-Path $InstalledSkill 'scripts/validate_design_state.py')
 if ($LASTEXITCODE -ne 0) { throw '原稿校验失败；保留错误，不提交绘图' }
 ```
 
-证据由维护者／编排方从用户原话、实际档案与真实工具返回独立整理，形状见随包 `reference/state-contract.md`；普通成员无需填写技术证据表。不能复制模型 state 充当证据。校验退出0仅代表结构与绑定通过，退出1保留失败，不证明审美、事实来源本身或用户已批准。
+证据由维护者／编排方从用户原话、实际档案与真实工具返回独立整理，形状见随包 `reference/state-contract.md`；普通成员无需填写技术证据表。开发者对新单图策划应在可信证据中独立分配 `target_images`（例如 `["M01"]`），不得使用输入图P01/R01或从模型state复制；编译器将其绑定到待审候选，不把它作为生成授权。不能复制模型 state 充当证据。校验退出0仅代表结构与绑定通过，退出1保留失败，不证明审美、事实来源本身或用户已批准。
 
 原稿失败但能构造合法新候选时，维护者可单独运行编译器；它只读本地输入，不调用模型或 MCP，拒绝覆盖已有输出：
 

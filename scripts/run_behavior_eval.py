@@ -136,7 +136,7 @@ def main():
         if len(cases)!=len(wanted):raise SystemExit('Unknown case selection')
     if a.variant:
         if [c['id'] for c in cases]!=['E11']:raise SystemExit('nano-approved variant requires --cases E11')
-        cases[0]=dict(cases[0],_variant=a.variant,context=cases[0]['context']+' 所选执行服务为Nano Banana reference_replica单图版，整个当前版本仅含M01；完整导出提示词、R01 style_only在前/P01 product_identity在后的顺序及参数均已展示确认，尚未提交。')
+        cases[0]=dict(cases[0],_variant=a.variant,context=cases[0]['context']+' 所选服务为Nano Banana核心任务接口；M01完整提示词、R01仅风格在前/P01商品身份在后的顺序及参数均已展示确认且费用明确授权，尚未提交。没有策划/确认/导出/评审扩展工具。')
     info=dict(rubric_version='1.0',case_ids=[c['id'] for c in cases],repeats=a.repeats,workers=a.workers,timeout_seconds=a.timeout,model_selection='CLI supported default; no model override',cli_version=subprocess.check_output([shutil.which('codex'),'--version'],text=True).strip(),harness_sha256={p.name:hashlib.sha256(p.read_bytes()).hexdigest() for p in harness.iterdir() if p.is_file()},isolation=dict(ignore_user_config=True,disabled=DISABLED,real_image_servers_loaded=False,stdin_mock_implementation=str(harness/'mock_mcp.py')))
     (root/'run.json').write_text(json.dumps(info,ensure_ascii=False,indent=2),encoding='utf-8')
     results=[]

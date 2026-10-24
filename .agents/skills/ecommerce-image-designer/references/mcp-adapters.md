@@ -1,10 +1,12 @@
 # 图像 MCP 选择、提交与恢复
 
-选工具、提交或恢复时阅读。下面的工具名来自 2026-10-22 本会话实际工具声明与只读能力查询，不是所有宿主的通用 API。每次使用先核对本会话的工具、参数 schema 和服务要求，不能把文档示例当作已连接证明。
+选工具、提交或恢复时阅读。下面的核心工具名于 2026-10-24 按本会话实际声明核对，历史能力查询另存记录，不是所有宿主的通用 API。每次使用先核对本会话的工具、参数 schema 和服务要求，不能把文档示例当作已连接证明。
 
 ## 指定服务与选择规则
 
 仅查询能力／配置状态时，使用 [状态契约](references/state-contract.md) 的 status。每次工具返回绑定一项 capabilities，模型 ID 复制实际目录；query_succeeded、configured 与 upstream/performance 分开，免费目录查询后两项均 not_tested。该模式没有自由就绪摘要、历史连通判断或选型推荐；实际选择／执行另按以下流程及 S3 授权处理。
+
+Skill 负责两端统一的选题、事实核对、文案、布局、术语和完整提示词；用户确认后只调用以下两个服务的核心生成／编辑、实际批量提交和任务查询取图接口。两端均不依赖服务端策划、复刻编译、resources 或 prompt 模板，产品事实与确认档案由 Skill 保留。
 
 图像生成和编辑仅由以下两个 MCP Server 执行：
 
@@ -21,68 +23,69 @@
 2. 确认支持当前模型、图像输入方式、比例／尺寸、图像数量与可访问输出。凭据仅检查名称和是否配置，不读取或显示密钥值。MCP 服务端读不到宿主附件时，先取得用户允许的传递方式，不能编造本地路径或静默上传到别的图床。
 3. 显示从指定两个服务中选择的服务与模型。更换服务、模型或上传范围是方案差异，须符合既有确认与授权。可依据能力推荐，不把供应商宣传当作独立实测；某个服务已提交且结果不明时，也不能换到另一个指定服务重提。
 4. 建立“设计版本＋图号＋输入图片顺序＋准确提示词＋非秘密参数→工具调用”的映射。真实图片通过 schema 的图像字段传入。上游接受风格／结构图的方式与产品保真能力有限，参考过多会混淆时先讨论输入取舍或拆分任务，不静默丢图。
-5. 执行前检查 SKILL.md 的 S3 条件，并满足服务本身的确认机制。每张图的幂等身份在提交前确定，提交后立即记录原任务 ID。
+5. 执行前检查 SKILL.md 的 S3 条件，用户确认和费用授权由本技能档案承载。每张图的幂等身份在提交前确定，提交后立即记录原任务 ID。
 6. 查询或分段等待已有任务；遵守服务返回的轮询建议，单次等待尽量不超过 60 秒，长任务给用户有意义的进展。等待结束不表示后台已取消。
 7. 以实际图片文件／可访问图片为取图完成证据；保留部分成功与下载失败。转到 S5 看图和用户验收。
 
 提交前把实际工具名、全部非秘密参数、输入图内容身份和稳定幂等键写入档案。响应同时检查 `isError`、结构化数据与图片内容；有些工具会把部分成功和失败一起返回，不能因顶层报错就丢掉已完成产物。优先读取 `structuredContent`，必要时解析文本 JSON；不能把说明文字中的示例当真实产物。
 
-## Nano Banana 电商工作流适配
+## Nano Banana 核心生成与批量任务适配
 
-本会话前缀为 `mcp__zhenzhen_nanobanana_mcp__`。能力和配置入口为 `list_models`；查看图片为 `inspect_design_images`，参数是 `images` 图片路径／直链数组。该查看入口不出图；返回的图片须由 Host 实际观察。
+本技能自行策划、统一术语、保存文案排版和构造完整提示词。仅依赖核心图片生成／编辑、批量提交及原任务查询取图；不调用 `plan_ecommerce_design`、`build_*_prompts`、`export_*`、`confirm_ecommerce_design`、`submit_ecommerce_design` 或 `review_reference_replica`，也不依赖 Server 的 resources／prompt 模板。无需把方案转换成 `brief/reference_replica/suite`。扩展工具是否存在不影响本流程；核心工具名称或 schema 变化时，以当前声明重新适配并展示差异，不能猜参数或自动换服务。
 
-常规主图／详情页／SKU 采用服务的设计流程：
-
-| 环节 | 实际工具与关键约定 |
+| 环节 | 核心工具与实际字段 |
 |---|---|
-| 底稿 | `plan_ecommerce_design` 接收 `design_id`、`expected_revision`、完整 `brief`，以及可选逐图 `edits`。新建版本期望为 0，修改用服务返回的当前版本。 |
-| 输入 | `brief.kind` 为 main / detail / sku；提供本商品图片、实际观察、有来源的已核实事实、参考分析及其选择。核心字段见下文，完整嵌套 schema 从实际资源／工具读取，不猜字段。 |
-| 研讨 | 处理服务返回的 `needs_input` 和问题；核对逐图文案、排版、数量及模型。服务默认图数可能和用户方案不同，需调整。 |
-| 读取 | `get_ecommerce_design` 用 `design_id` 和可选 `revision` 取得实际保存的 design、tasks 和产物；它不导出普通方案的完整执行提示词。不可将 panels 当完整 task.prompt。 |
-| 整套提示词 | `build_product_suite_prompts`／`export_product_suite_prompts` 返回 `design`、`style_digest`、`prompts`。先读 `nanobanana://templates/product-suite` 和实际的 `nanobanana://templates/styles`、`nanobanana://templates/main`、`nanobanana://templates/detail`、`nanobanana://templates/sku`，或等价 prompt 指引。 |
-| 确认 | 用户确认了服务当前整个版本后，`confirm_ecommerce_design` 传服务的 `design_id`、`revision`、`digest`、`user_confirmed=true` 和用户证据 `confirmation_note`。该工具无 panel_ids；不能用仅一张图的认可批准整版。 |
-| 提交 | `submit_ecommerce_design` 传相同 `design_id`、`revision`、`digest`、已确认 `panel_ids`；明确取得本次收费授权后才传 `authorize_paid=true`。 |
-| 查询 | 保存返回的 `checkpointer`、`thread_id`、各 `task_id`，用 `get_image_tasks` 查询，或 `wait_image_tasks` 等待；`get_ecommerce_design` 读取已落盘产物。 |
+| 异步提交（优先） | `submit_image_tasks({checkpointer, thread_id, tasks})`，每批1–20项，立即返回已有／已排队任务。 |
+| 同步生成 | `generate_images({checkpointer, thread_id, tasks, wait_timeout_seconds})`；等待到期不取消后台。同一请求未知时不能再切异步重提。 |
+| 查询与取图 | `get_image_tasks({checkpointer, thread_id, task_ids})`，或 `wait_image_tasks` 加 `wait_timeout_seconds`；用返回 `tasks[].images[].path/sha256` 获取、实际查看产物。 |
+| 安全恢复 | `retry_image_tasks` 仅在查询确认 `safe_to_retry=true`、原授权仍有效时沿原三元组恢复；文件损坏另需 `repair_files=true`，保留原件。 |
 
-服务端 `revision`、`digest` 必须原样保存，不能在 Agent 的设计档案中自行算一个来冒充。文案或提示词有改动，要重新保存、核对和确认当前服务版本。不要用 `submit_image_tasks` 或 `generate_images` 绕过该服务对电商设计的确认与收费授权。
+`tasks[]` 每项需要 `task_id` 和**完整原样绘图提示词** `prompt`；可带当前 schema 支持的 `model`、`api_format`、`endpoint`、`aspect_ratio`、`resolution`、`reference_images` 和等长同序的 `reference_sha256`。提示词、尺寸和所有非秘密参数须在 S3 展示确认；接口不会替你补商品事实、平台要求或图像角色，也没有 `authorize_paid`／`user_confirmed` 参数。真实用户确认和费用授权写入 Skill 档案，不把这些字段硬塞进工具。
 
-### 入口选择与输入图片角色
+有输入图时使用 `reference_images`；按批准的顺序在 prompt 中逐张说明产品身份、风格／结构参考、编辑底图用途。核心接口没有固定的 `style_only` 槽位，不继承旧复刻工具的图序限制。仅结构参考可转译成布局文字而不上传；确需上传时明确禁止借用其颜色、字体和商品事实，并告知生成结果仍须视觉核对。输入路径／直链必须可读，不为传图虚构路径、搬运私有文件或静默外传。
 
-| 实际需求 | 正确路径与边界 |
-|---|---|
-| 普通单类草案 | `plan_ecommerce_design` 可免费研讨和改稿。当前工具不提供普通方案的完整执行 prompt 导出，本技能要求保存并展示完整执行提示词，故不能假称已导出后直接提交。若无符合需求的可导出 Nano 入口，报告限制，在用户同意后用 GPT Image 执行自行构造并确认的提示词；用户坚持该入口则保留待执行，不绕门禁。 |
-| 完整主图＋详情＋SKU | `build_product_suite_prompts`，共享规范以 `brief.suite.style` 为唯一来源，非 `brief.style`。当前要求三类齐全：1–8 主图、8–15 详情、每个真实 SKU 一图；不能为套模板虚构 SKU 或擅加图数。 |
-| 参考图风格迁移或风格＋结构迁移 | 先读 `nanobanana://templates/reference-replica` 和 `nanobanana://templates/reference-analysis`，用 `build_reference_replica_prompts`／`export_validated_reference_replica`。`scope=series` 可做单图／同类系列；整套 scope 则遵守三类完整约束。只借鉴风格时，目标 composition 自行适配，不借用未获准的原画面结构。 |
-| 仅结构参考，禁止借鉴其配色与字体 | 先转译成已确认的目标构图／布局指令，参考图只用于分析，不把它放入固定 style_only 槽位。若需图像级结构输入且现入口不能准确表达角色，说明限制，经用户确认选择支持该映射的指定服务。 |
+按当前接口 `resolution={width,height}` 只按长边选择基础／2k／4k模型（≤1024／≤2048／更大），不保证输出精确像素，也不替代 `aspect_ratio`。提交前核对实际模型变体和用户同意的画幅；有图时 endpoint 不得强用 generations。能力目录工具若存在可辅助只读核对，但不是策划／生成的必经流程；用户只询问状态时，仍按状态契约如实报告查询证据和未验证项。
 
-普通 plan 与 suite 的模型 `reference_images` 仅来自真实产品图或各 SKU 图，`benchmarks.source` 不是上传参数。不要把竞品图塞进 `product_images` 来“传参考”。复刻入口的导出 `input_images` 固定图1=`style_only`、图2起=`product_identity`（一张风格＋1–3张本商品图）；必须使用导出顺序与 SHA256，不能套用产品图在前的通用顺序。使用仅风格／仅结构／两者的业务分类时，还要核对具体入口是否表达得出用户允许的用途。
+下列仅说明字段层级；`已确认提示词`及图片路径必须替换为当前完整执行快照，不可原样提交：
 
-导出后逐项保存 `prompts[].task.prompt`、实际模型／接口／画幅／输入图顺序，以及用户图号到 `panel_id` 的映射。`style_digest` 只标识共享风格，不能当 `design.digest` 用于确认。服务可根据分辨率选择模型变体，要展示实际执行配置，不能只展示 brief 中的基础模型名。普通 plan 当前 `detail_count` 限 8–15，其他图数不能套入；suite 也不是任意组合的组图入口。遇到范围不符先报告，再讨论适合的指定服务，不扩改用户任务。
+```json
+{
+  "checkpointer": "ecommerce-image-designer",
+  "thread_id": "product-task-unique",
+  "tasks": [{
+    "task_id": "v3-M01",
+    "prompt": "已确认提示词：图1为本商品外观依据；图2仅配色参考。准确文案、版式和禁止迁移的竞品内容须写全。",
+    "model": "nano-banana-pro",
+    "api_format": "auto",
+    "endpoint": "auto",
+    "aspect_ratio": "1:1",
+    "reference_images": ["P01_ABSOLUTE_PATH", "R01_ABSOLUTE_PATH"]
+  }]
+}
+```
 
-### 核心嵌套字段与改稿
+`checkpointer/thread_id/task_id` 由 Skill 在提交前冻结，逐项绑定“设计版本、业务图号、完整 prompt、输入顺序和内容摘要、实际参数”。例如 `v3-M01` 只是命名示意；重试必须沿原身份，已确认的新改稿才使用新版本任务身份。每批≤20，超过则按已批准图号分批，禁止擅加图或 SKU。部分确认只提交对应图号，不需要批准整个服务端设计；未批准和已冻结图保留原稿。
 
-- `facts` 每项包含 `fact_id`、`label`、`value`、`source`，可带 `category`（benefit/material/size/usage/trust/offer）及 `pain_point`。这些是当前产品的可追溯依据，不抄竞品。
-- `benchmarks` 每项包含 `source`、`visual_focus`、`hierarchy`、`copy_approach`、`strengths`、`weaknesses`、`adaptation`。仅记录用户已提供资料的分析；不用参考时须依据用户决定填写 `reference_choice=skip` 与 `reference_reason`。
-- SKU `variants` 每项需要 `sku_id`、`label`、真实 `attributes`、该版本 `product_images`；`fact_ids` 仅引用本 SKU 可用事实。不能用其他 SKU 图代替。
-- 普通 `edits` 每项为 `panel_id`、`headline`、`body`、`visual`、`layout`、`fact_ids`。服务会从完整 brief 重建默认全部 panels，再应用这些 edits；新版本须带回所有保留的定稿 edits，不能仅传被改图而丢掉其他定稿。
-- suite／reference_replica 改相应完整 `style/frames`，不要用普通 edits。新版本展示全部差异；共享 style 变更影响全部关联图。已接受旧产物保留，但新服务版本仍需合法确认。
+服务不负责本技能的用户确认门禁，不能把直接出图理解为省略 S3。生成后的产品保真、风格／结构许可、类目适配、布局光线、逐字文案和事实六项由 Skill 实际看图并记录；无需服务端复刻评审工具。满意仍以用户接受为准。
 
-只确认部分图时，先检查能否建立符合类型约束的独立执行方案，重新展示并取得确认；若不能，说明限制并经用户同意改用另一指定服务。只有用户确认了整个服务版本后，才可调用确认接口并通过 `panel_ids` 选择执行子集。每次提交不超过 20 项，更多项分批沿用同一批准版本和原任务映射。
+旧档案若带 `design_id/revision/digest` 或 `reference_replica/suite`，保留原记录，不把 Server digest 当新快照摘要。不为执行新任务重走旧编译器。旧请求状态不明时先用档案保存的核心任务三元组查询；只有 design_id 而无可用任务身份时，报告缺口、暂停重复执行并由服务维护者核对，不能换新编号重画。
 
-服务将设计提交映射为 `checkpointer=ecommerce-design`、`thread_id=design_id`、`task_id=r{revision}-{panel_id}`；实际以返回值为准。重复查询继续沿用原身份，不能换设计编号重试。`failed`、`unknown`、取消或超时先查询；`recovering` 表示恢复原响应，不是重画。只有服务明确返回 `safe_to_retry=true` 且属于授权内的安全阶段，才考虑用 `retry_image_tasks` 沿原身份恢复；损坏文件修复需其 `repair_files` 机制，保留原文件。
+### 校验失败与改稿
 
-若只有概念素材、缺少此策划器要求的真实产品信息，不能伪造事实来通过校验；保留草案，说明该入口限制。若另一指定服务 `zhenzhen-gptimagegen2.5-mcp` 支持任务且已连接，可在展示变更并取得确认后使用；否则报告缺口。竞品复刻工具若适用，应先读服务对应模板并检查实际编译结果，仍不能复制竞品事实或跳过本技能确认。
-
-复刻生成后，按 `get_ecommerce_design` 返回的真实 task_id、路径及 SHA256 实际看图，再用 `review_reference_replica` 保存六维证据；不能把 Server 的结构校验或 `agent_passed` 当用户已经接受。局部编辑任务还要确认服务能将正确底图作为编辑输入；固定产品身份槽位的复刻／suite 不能自动冒充局部修改入口。能力不符就先说明，再讨论 GPT Image 编辑路径。
+- 调用参数按当前工具 schema 构造；核心任务不接收 `brief/reference_replica/style/frames`。看到这些字段相关错误，先核对是否误走了扩展策划工具，不能继续修补其模板以作为本流程前提。
+- 文案术语、禁用词和事实在 Skill 的确认版中统一，保留来源与用户决定。旧服务的 `terminology` 是“别名→规范词”，而不是允许词清单；历史错误照实保留。新流程不会提交这一字段，但也不能为了绕过错误删除用户既定用词规则或事实。
+- 局部改稿仅修改被点名图的 prompt／参数，保留其他已定稿图和全部事实、来源、布局与图片映射；共享规范变化列出受影响图，重新展示新增差异。用户明确冻结旧图时保留旧组，不重复问是否重画。
 
 ## GPT Image 2.5 MCP 适配
 
-本会话前缀为 `mcp__zhenzhen_gptimagegen2_5_mcp__`。只读入口 `get_model_guide` 返回模型与凭据配置状态。当前声明有 `gpt-image-2.5-sunburst` 和 `gpt-image-2.5-flare`；供应商对编辑精度／速度的描述未在本项目实测，不写成速度或质量保证。
+本会话前缀为 `mcp__zhenzhen_gptimagegen2_5_mcp__`。只读入口 `get_model_guide` 返回模型与凭据配置状态。能力查询不是执行前置步骤；按本轮工具 schema 和已核对模型构造核心请求。当前声明有 `gpt-image-2.5-sunburst` 和 `gpt-image-2.5-flare`；供应商对编辑精度／速度的描述未在本项目实测，不写成速度或质量保证。
 
 | 情形 | 实际工具与参数 |
 |---|---|
 | 有图的首次创作／后续编辑 | 优先 `submit_image_edit`，传 `images`、完整 `prompt`、明确 `model`、稳定 `idempotency_key` 及支持的 `size`／其他参数。首次创作中使用编辑端点不改变它在业务上仍属首次生成。 |
 | 明确文生图素材 | `submit_image_generation`，传 `prompt`、`model`、稳定 `idempotency_key` 和已确认参数，不伪造参考图。 |
+| 多图核心批量 | 当前有 `submit_image_batch({checkpointer, thread_id, tasks, max_concurrency})` 和同步 `run_image_batch`；每批1–20项，默认并发5。每项为 `task_id`、`operation=generate/edit`、完整 `prompt`、`model` 及本工具支持的图片／参数。 |
+| 批次恢复 | `get_image_batch({checkpointer,thread_id})` 读本地记录；`get_batch_image_task` 加原 `task_id` 查询单项。保存本地任务键与 `provider_task_id` 的区别；`SUBMITTING/SUBMISSION_UNCERTAIN` 不得自动重提。 |
 | 已有任务 | `get_image_task(task_id, save=true)` 查询并取得文件；或 `wait_image_task`，使用原 `task_id` 和原输出目录。 |
 | 有图片 URL 但下载失败 | 使用 `download_image(url, output_dir)` 恢复文件；不重新绘图。 |
 
@@ -91,14 +94,14 @@
 确认前校验以下当前契约，不能让自动参数修正发生在批准之后：
 
 - GPT Image 使用 `size="宽x高"` 或 `auto`，没有 Nano Banana 的 `aspect_ratio`／`resolution` 参数。显式尺寸两边为 16 的倍数、最大边≤3840、长宽比≤3:1、总像素 655360–8294400。用户指定 750px 或超长详情页时，先讨论受支持画布、拆屏或可执行的后处理方案；不静默改尺寸或裁掉内容。
-- 输入支持本机绝对路径、公开 HTTP(S) 图片或 data URL，PNG/JPEG/WebP；当前最多16张、合计100MiB。编辑至少一张底图；记录实际顺序和内容身份。首轮仍受本技能用户图片条件限制，不能因 API 允许空 images 就无图生成商品。
+- 输入支持本机绝对路径、公开 HTTP(S) 图片或 data URL，PNG/JPEG/WebP；当前最多16张、合计100MiB；Nano 核心每项最多4张，不混用两者上限。编辑至少一张底图；记录实际顺序和内容身份。首轮仍受本技能用户图片条件限制，不能因 API 允许空 images 就无图生成商品。
 - `quality` 在 reverse 下仅 auto/low/medium/high；xhigh/max 需明确的 official 分组。不要为获得参数自行切换分组。数量扩展 `n` 位于 `official_options`，不是顶层字段；多图逐项用稳定身份并保存结果 index 与图号的关系。
 - `official_options.stream=true` 与 `submit_image_generation`／`submit_image_edit` 异步提交互斥。若用户选择流式，则先确认完整配置，再用本服务同步 `generate_image`／`edit_image`；不能提交失败后自动切路径重发。`partial_images` 依赖流式。
 - `mask` 通过 `official_options.mask` 传入，仅适用于编辑，PNG、<4MiB、有 alpha 通道且与**首张底图**同尺寸。局部修改且要求其他保持时，优先保留受支持的底图尺寸；底图尺寸不受支持时，先说明输出画布或缩放差异，讨论恢复合适底图／接受尺寸变化后再确认，不能套用旧任务尺寸静默放大。透明背景的输出须 PNG/WebP，压缩参数须显式 JPEG/WebP。缺少 mask 不假称实现像素级局部保护。
 
 具体调用形式如 `get_image_task({task_id: 原ID, save: true})`；等待时显式设置 `wait_image_task` 的 `timeout_seconds`，Nano Banana 则用 `wait_timeout_seconds`，避免混用字段。一次等待到期只结束等待。新的已确认改稿使用新的版本／图号幂等身份，恢复旧任务保持原身份；旧结果未知时不能借“改稿”先重复执行相同或相关收费请求。
 
-该 MCP 没有电商方案确认工具时，由本技能的版本快照和真实用户确认记录承担提交检查。`SUCCESS`／`COMPLETED` 还须结合 `files`、`save_status`、`download_errors` 检查产物是否完整；`UNKNOWN` 或提交后无任务 ID 时停止自动提交，保留幂等键与请求时间，报告需核对的状态。相同幂等键有助于复用，但不能将它当作无条件重发收费请求的授权。
+GPT Image 与 Nano 一样，由本技能的版本快照、真实用户确认和费用授权记录承担提交检查，不依赖服务端的策划／导出／确认／评审扩展。当前 GPT 已暴露上述核心批量工具，批量项使用 images、operation、size、group／official_options；不能混用 Nano 的 reference_images、aspect_ratio、resolution 或 reference_sha256。批次外层接收 max_concurrency；每项不接收单图 idempotency_key，固定三元组由批次维护幂等。某宿主未暴露批量入口时，可在原确认范围内逐图异步提交，记录各图幂等键与返回ID；不强制依赖扩展计划器。official_options.n 只在实际 schema 支持且已确认时使用，记录结果 index 与图号映射，不静默改变分组或数量。`SUCCESS`／`COMPLETED` 还须结合 `files`、`save_status`、`download_errors` 检查产物是否完整；`UNKNOWN` 或提交后无任务 ID 时停止自动提交，保留幂等键与请求时间，报告需核对的状态。相同幂等键有助于复用，但不能将它当作无条件重发收费请求的授权。
 
 ## 缺少能力与结果不明
 

@@ -149,7 +149,7 @@ def validate_cases(path: Path) -> list[str]:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, UnicodeError, ValueError):
         return ["evaluation data cannot be read"]
-    if not isinstance(data, dict) or data.get("schema_version") != 1 or data.get("rubric_version") != "1.0":
+    if not isinstance(data, dict) or data.get("schema_version") != 1 or data.get("rubric_version") not in {"1.0", "2.0-core"}:
         return ["invalid evaluation schema or rubric version"]
     cases = data.get("cases")
     if not isinstance(cases, list) or not cases:

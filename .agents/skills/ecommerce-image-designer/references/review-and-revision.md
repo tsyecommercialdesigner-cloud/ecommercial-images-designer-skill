@@ -18,7 +18,7 @@ S5 或用户提出修改时阅读。第一次检查由 Agent 完成，最终接�
 
 4. 展示图片预览、版本／图号、文件链接和发现的问题，再请用户判定接受、部分接受或修改。本地图片用宿主可渲染的绝对路径；远程图片用受支持的预览方式和可用链接，不用无权限的服务内部地址冒充交付。
 
-Nano Banana 的 replica／reference_replica 方案还须调用 `review_reference_replica`：绑定实际 design_id、revision、task_id 和当前文件 image_sha256，填写 product_fidelity、style_fidelity、category_fit、layout_and_lighting、text_accuracy、factual_accuracy 六项，每项提供实际可见 evidence；revise／uncertain 写 correction。看不见的内容不能填 pass；`agent_passed` 仍需交用户验收。该工具只适用于复刻流程，不强加给普通方案或 GPT Image 任务。
+Nano Banana 核心任务同样由 Skill 实际看图，逐项记录产品保真、参考用途与风格、类目适配、布局光线、文字准确性和事实依据；绑定实际任务身份、文件路径和 SHA256。看不见的内容标 uncertain 并说明限制，不依赖服务端 review_reference_replica 或其分数，仍须用户验收。 检查记录使用 visual_review，六项为 product_fidelity、style_fidelity、category_fit、layout_and_lighting、text_accuracy、factual_accuracy，每项写 status 和实际 evidence；同时绑定 task_id、image_sha256。
 
 未通过 Agent 检查的图片也可作为待修订证据展示，明确问题；不能自行宣称用户已经接受。没有用户回复时保留 `pending`。
 
@@ -41,6 +41,6 @@ Nano Banana 的 replica／reference_replica 方案还须调用 `review_reference
 
 同一方案、同一输入、同一设置连续出现同类错误时，不无限重抽。分析原因，提出更明确的提示、区域编辑、拆分画面或已获准的后期排版方案；用户选择后再继续。旧版本不覆盖，服务任务状态与用户验收状态分别维护。
 
-改共享 style 时回 S2 并列出全部受影响图号；不能仅修改本次被点名的图，却沿用其他关联图的旧确认。普通 Nano Banana 方案新版本要补回所有保留的定稿 edits；suite／reference_replica 则完整更新相应对象。编辑底图要可读，并核对原批准产品图和事实，生成图自身不能成为真实商品依据。服务入口不能按要求绑定底图或保持局部修改时，先说明能力限制，不把重新整图生成冒充局部编辑。
+改共享风格时回 S2 并列出全部受影响图号；保留其他定稿图的事实、来源、文案排版、完整 prompt 和输入映射，只为获准改稿构造新版本核心任务。编辑底图要可读，并核对原批准产品图和事实，生成图自身不能成为真实商品依据。服务入口不能按要求绑定底图或保持局部修改时，先说明能力限制，不把重新整图生成冒充局部编辑。
 
 用户接受后停止新提交。用户停止／暂缓时立即停止新增生成和迭代，保存待办及已有任务身份；需要取消时依据实际工具能力与返回状态处理，不能声称客户端停止等待就取消了后台。费用未知、关键资料缺失或无继续授权时，停在相应阻塞阶段，待条件补齐后再恢复。

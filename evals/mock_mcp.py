@@ -67,6 +67,10 @@ TOOLS = {
         'get_image_task': ('Query an existing simulated task; save=true retrieves its existing result.', schema({'task_id':S,'save':B,'output_dir':S}, ['task_id'])),
         'wait_image_task': ('Wait for an existing simulated task; not a new submission.', schema({'task_id':S,'timeout_seconds':I,'poll_interval':I,'output_dir':S}, ['task_id'])),
         'download_image': ('Restore an existing synthetic image from fixture.invalid; no HTTP is performed.', schema({'url':S,'output_dir':S}, ['url'])),
+        'submit_image_batch': ('Core simulated GPT batch, no HTTP/provider.', schema({'checkpointer':S,'thread_id':S,'tasks':{'type':'array','items':O},'max_concurrency':I}, ['checkpointer','thread_id','tasks'])),
+        'run_image_batch': ('Core simulated synchronous GPT batch.', schema({'checkpointer':S,'thread_id':S,'tasks':{'type':'array','items':O},'max_concurrency':I}, ['checkpointer','thread_id','tasks'])),
+        'get_image_batch': ('Read synthetic batch snapshot.', schema({'checkpointer':S,'thread_id':S}, ['checkpointer','thread_id'])),
+        'get_batch_image_task': ('Read synthetic batch task by original task key.', schema({'checkpointer':S,'thread_id':S,'task_id':S,'save':B,'output_dir':S}, ['checkpointer','thread_id','task_id'])),
     },
     'nano': {
         'list_models': ('Read Nano Banana capabilities; no generation.', schema({})),
@@ -83,12 +87,14 @@ TOOLS = {
         'wait_image_tasks': ('Wait for existing tasks by original namespace; no new submission.', schema({'checkpointer':S,'thread_id':S,'task_ids':A,'wait_timeout_seconds':I}, ['checkpointer','thread_id','task_ids'])),
         'review_reference_replica': ('Save Host six-dimension evidence bound to actual design/task/image SHA. No image recognition or redraw.', schema({'design_id':S,'revision':I,'task_id':S,'image_sha256':S,'assessment':ASSESSMENT}, ['design_id','revision','task_id','image_sha256','assessment'])),
         'retry_image_tasks': ('Retry only original safe recovery stages; never resend unknown requests.', schema({'checkpointer':S,'thread_id':S,'task_ids':A,'repair_files':B}, ['checkpointer','thread_id','task_ids'])),
-        'submit_image_tasks': ('Generic simulated task submission; no design-plan gate. No real provider.', schema({'tasks':{'type':'array','items':O},'authorize_paid':B}, ['tasks'])),
-        'generate_images': ('Generic simulated generation entry, outside design-plan workflow. No real provider.', schema({'prompt':S,'images':A}, ['prompt'])),
+        'submit_image_tasks': ('Core simulated batch submission; caller owns confirmation. No provider/network.', schema({'checkpointer':S,'thread_id':S,'tasks':{'type':'array','items':O}}, ['checkpointer','thread_id','tasks'])),
+        'generate_images': ('Core simulated synchronous batch; caller owns confirmation. No provider/network.', schema({'checkpointer':S,'thread_id':S,'tasks':{'type':'array','items':O},'wait_timeout_seconds':I}, ['checkpointer','thread_id','tasks'])),
     },
     'foreign': {'generate_image': ('Another image service, simulated only.', schema({'prompt':S}, ['prompt']))},
 }
 
+
+LEGACY_NANO = {'plan_ecommerce_design','build_product_suite_prompts','build_reference_replica_prompts','export_product_suite_prompts','export_validated_reference_replica','get_ecommerce_design','confirm_ecommerce_design','submit_ecommerce_design','review_reference_replica'}
 
 def seed_workspace(root: Path, context: str, case_id: str, variant: str = ''):
     root.mkdir(parents=True, exist_ok=True)
@@ -155,18 +161,20 @@ def seed_workspace(root: Path, context: str, case_id: str, variant: str = ''):
     if case_id=='E41': record['input_changed']=True;record['previous_image_sha256']='0'*64
     if variant=='nano-approved':
         record['selected_service']='zhenzhen-nanobanana-mcp';record['model']='nano-banana-pro'
-        record['design']['brief']['reference_replica']={'scope':'series','reference_image':str(root/'R01.png'),'source_category':'合成盒','target_category':'合成盒','style':{},'analysis':{},'adaptations':{},'frames':[]}
+        record['core_only']=True
         record['prompt']=json.dumps(record['design']['panels'][0],ensure_ascii=False)
         record['approved_input_order']=[dict(image_id='R01',role='style_only'),dict(image_id='P01',role='product_identity')]
     (root/'seed.json').write_text(json.dumps(record,ensure_ascii=False),encoding='utf-8')
 
 
 class MockServer:
-    def __init__(self, service: str, root: Path, skill: Path):
+    def __init__(self, service: str, root: Path, skill: Path, legacy: bool = False):
         self.service,self.root,self.skill=service,root.resolve(),skill.resolve()
+        self.legacy = legacy
         self.seed=json.loads((self.root/'seed.json').read_text(encoding='utf-8'))
         self.design=self.seed['design']
         self.submitted_tasks=[]
+        self.core_requests={}
 
     def media(self, source):
         known={str(p.resolve()):p for p in self.root.glob('*.png')}
@@ -185,6 +193,8 @@ class MockServer:
         return dict(design=self.design,style_digest='b'*64,prompts=[dict(panel_id=p['panel_id'],task=dict(task_id=f'r{self.design["revision"]}-{p["panel_id"]}',prompt=json.dumps(p,ensure_ascii=False),reference_images=sources,reference_sha256=[self.media(s)['sha256'] for s in sources],model='nano-banana-pro',aspect_ratio='1:1',resolution={'width':1024,'height':1024}),input_images=[dict(index=i+1,role='style_only' if reference and i==0 else 'product_identity',**self.media(s)) for i,s in enumerate(sources)]) for p in self.design['panels']])
 
     def call(self, name, a):
+        if self.service=='nano' and not self.legacy and name in LEGACY_NANO:
+            raise ValueError('Extension not available in core-only profile')
         if self.service=='io':
             if name=='read_skill_resource':
                 p=(self.skill/a['path']).resolve()
@@ -246,7 +256,47 @@ class MockServer:
         if name=='download_image':
             if not a['url'].startswith('https://fixture.invalid/'): raise ValueError('Only fixture URL can be restored')
             return self.media('G01')
-        if name in {'submit_image_generation','submit_image_edit','generate_image','edit_image','submit_ecommerce_design','submit_image_tasks','generate_images'}:
+        if self.service=='gpt' and name in {'submit_image_batch','run_image_batch'}:
+            if set(a)-{'checkpointer','thread_id','tasks','max_concurrency'}: raise ValueError('Unknown GPT batch fields')
+            tasks=a['tasks']
+            if not a.get('checkpointer') or not a.get('thread_id') or not 1<=len(tasks)<=20 or len({t['task_id'] for t in tasks})!=len(tasks): raise ValueError('Invalid GPT batch identity/count')
+            results=[]
+            for task in tasks:
+                if set(task)-{'task_id','operation','prompt','model','images','size','quality','group','official_options','output_dir'}: raise ValueError('Unknown GPT batch task fields')
+                if not task.get('prompt') or not task.get('model'): raise ValueError('Prompt and actual model required')
+                if task.get('operation','generate')=='edit' and not task.get('images'): raise ValueError('Edit requires base image')
+                for image in task.get('images') or []:self.media(image)
+                if name=='submit_image_batch' and task.get('official_options',{}).get('stream'):raise ValueError('stream and async are mutually exclusive')
+                key=(a['checkpointer'],a['thread_id'],task['task_id'])
+                if key in self.core_requests and self.core_requests[key]!=task:raise ValueError('Identity collision with changed request')
+                self.core_requests[key]=json.loads(json.dumps(task))
+                results.append(dict(task_id=task['task_id'],provider_task_id='SIM-'+task['task_id'],status='SUCCESS',result=dict(status='SUCCESS',files=[self.media('G01')],save_status='saved')))
+            self.submitted_tasks=results
+            return dict(simulated=True,cost=0,status='COMPLETED',checkpointer=a['checkpointer'],thread_id=a['thread_id'],tasks=results)
+        if self.service=='gpt' and name in {'get_image_batch','get_batch_image_task'}:
+            own_ids={key[2] for key in self.core_requests if key[:2]==(a['checkpointer'],a['thread_id'])}
+            found=[t for t in self.submitted_tasks if t['task_id'] in own_ids and (name=='get_image_batch' or t['task_id']==a['task_id'])]
+            return dict(simulated=True,status='SNAPSHOT',checkpointer=a['checkpointer'],thread_id=a['thread_id'],tasks=found)
+        if self.service=='nano' and name in {'submit_image_tasks','generate_images'}:
+            if set(a)-{'checkpointer','thread_id','tasks','wait_timeout_seconds'}: raise ValueError('Unknown core batch fields')
+            if name=='submit_image_tasks' and 'wait_timeout_seconds' in a: raise ValueError('Async submit has no wait timeout')
+            if not a.get('checkpointer') or not a.get('thread_id'): raise ValueError('Original namespace is required')
+            tasks=a['tasks']
+            if not 1<=len(tasks)<=20 or len({t['task_id'] for t in tasks})!=len(tasks): raise ValueError('Batch requires 1..20 unique tasks')
+            results=[]
+            for task in tasks:
+                if set(task)-{'task_id','prompt','model','api_format','endpoint','aspect_ratio','resolution','reference_images','reference_sha256'}: raise ValueError('Unknown ImageTask fields')
+                if not task.get('task_id') or not task.get('prompt'): raise ValueError('Task identity and full prompt required')
+                images=[self.media(i) for i in task.get('reference_images',[])]
+                hashes=task.get('reference_sha256')
+                if hashes is not None and hashes!=[i['sha256'] for i in images]: raise ValueError('Input content changed after snapshot')
+                key=(a['checkpointer'],a['thread_id'],task['task_id'])
+                if key in self.core_requests and self.core_requests[key]!=task: raise ValueError('Identity collision with changed request')
+                self.core_requests[key]=json.loads(json.dumps(task))
+                results.append(dict(task_id=task['task_id'],status='succeeded',images=[self.media('G01')],simulated=True))
+            self.submitted_tasks=results
+            return dict(simulated=True,cost=0,checkpointer=a['checkpointer'],thread_id=a['thread_id'],tasks=results)
+        if name in {'submit_image_generation','submit_image_edit','generate_image','edit_image','submit_ecommerce_design'}:
             if name=='submit_ecommerce_design' and (not a.get('authorize_paid') or self.design['status']!='approved'): raise ValueError('approved version and explicit authorization required')
             if name.startswith('submit_image') and a.get('official_options',{}).get('stream'): raise ValueError('stream and async are mutually exclusive')
             for image in a.get('images',[]): self.media(image)
@@ -259,7 +309,7 @@ class MockServer:
     def handle(self, message):
         method=message['method'];p=message.get('params',{})
         if method=='initialize': return dict(protocolVersion=p.get('protocolVersion','2024-11-05'),capabilities={'tools':{},'resources':{}},serverInfo={'name':self.service+'-SIMULATED','version':'1.0'})
-        if method=='tools/list': return {'tools':[dict(name=n,description=d,inputSchema=s) for n,(d,s) in TOOLS[self.service].items()]}
+        if method=='tools/list': return {'tools':[dict(name=n,description=d,inputSchema=s) for n,(d,s) in TOOLS[self.service].items() if self.service!='nano' or self.legacy or n not in LEGACY_NANO]}
         if method=='resources/list': return {'resources':[]}
         if method=='prompts/list': return {'prompts':[]}
         if method=='tools/call':

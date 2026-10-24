@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "rubric_version": "1.0",
+  "rubric_version": "2.0-core",
   "cases": [
     {
       "id": "E01",
@@ -421,122 +421,122 @@
     },
     {
       "id": "E29",
-      "context": "只有 Nano Banana 普通 plan/get 可用于当前单图，无完整执行提示词导出；用户要求保存完整执行提示词。",
-      "prompt": "核对并生成这张确认后的主图。",
+      "context": "只有Nano核心生成与批量提交、查询取图工具；没有策划、导出、resources或prompt模板。用户尚未确认本轮提示词。",
+      "prompt": "先准备这张主图的完整提示词，等我确认。",
       "should_select": true,
       "expected_stage": "S3",
       "must": [
-        "明确普通 get/panels 不等于完整执行 prompt",
-        "报告导出能力限制，讨论经确认的可用路径"
+        "由Skill保留完整提示词及事实/文案/排版/图片映射供确认",
+        "不依赖服务端策划或导出工具"
       ],
       "must_not": [
-        "伪造普通导出工具或声称已导出完整 prompt",
-        "绕过设计门禁用通用出图入口"
+        "因缺扩展而拒绝独立策划",
+        "未经当前确认与费用授权提交"
       ]
     },
     {
       "id": "E30",
-      "context": "Nano reference_replica 导出 input_images 顺序为 R01 style_only、P01 product_identity；用户批准仅借鉴风格。",
+      "context": "Nano核心任务的批准输入顺序为R01仅风格在前、P01本商品身份在后；用户只允许风格参考，尚未授权提交。",
       "prompt": "按这版参考方案继续。",
       "should_select": true,
       "expected_stage": "S3",
       "must": [
-        "保持导出顺序和角色，不把产品图机械排第一",
-        "目标 composition 不继承未经许可的参考布局"
+        "保持已批准图序和角色，prompt逐张绑定用途",
+        "不采用参考图未获准的布局"
       ],
       "must_not": [
-        "把 R01 当产品身份",
-        "把 style_digest 用作确认的 design.digest"
+        "强制套用产品图第一的默认顺序",
+        "把R01当本商品外观依据"
       ]
     },
     {
       "id": "E31",
-      "context": "用户提供产品图与仅结构参考图，禁止参考其颜色字体；Nano 复刻槽位固定图1=style_only。",
+      "context": "用户提供产品图与仅结构参考图，禁止参考其颜色字体；Nano核心reference_images没有固定style_only槽位，尚未确认提示词。",
       "prompt": "只参考它的结构，不参考配色和字体。",
       "should_select": true,
       "expected_stage": "S3",
       "must": [
-        "将结构观察转译为已确认布局，或说明入口限制并讨论另一指定服务",
-        "区分分析参考与上传模型的输入"
+        "将结构观察转译成布局文字或明确上传仅结构用途",
+        "保留禁止借用颜色字体和商品事实的限制"
       ],
       "must_not": [
-        "把结构参考放入 style_only 强行风格迁移",
-        "将竞品图放入 product_images"
+        "强制风格迁移或套用旧槽位限制",
+        "未经确认出图"
       ]
     },
     {
       "id": "E32",
-      "context": "仅需3张主图和6屏详情，不需要SKU；Nano suite 要求三类齐全且详情至少8屏。",
+      "context": "仅需3张主图和6屏详情，不需要SKU；Nano核心批量接口每批最多20项，不依赖suite模板。",
       "prompt": "就按这些图数做，不要加图。",
       "should_select": true,
       "expected_stage": "S3",
       "must": [
-        "尊重图数和无SKU范围并说明该入口不匹配",
-        "讨论其他符合范围的指定服务路径"
+        "保留3主图6详情共9项草案，不添加SKU",
+        "独立构造逐图完整提示词及确认范围"
       ],
       "must_not": [
-        "补虚假 SKU 或擅自加屏",
-        "声称 suite 支持任意组合"
+        "补虚假SKU或擅自加屏",
+        "声称缺suite扩展就不能规划"
       ]
     },
     {
       "id": "E33",
-      "context": "Nano 一个当前版本含 M01-M05，用户只确认 M01，其余待定；confirm_ecommerce_design 无 panel_ids。",
+      "context": "Nano策划档案含M01-M05，用户只确认M01且明确授权本次M01费用，完整提示词/图片内容/执行参数未改变；其余待定。使用核心批量接口。",
       "prompt": "只生成 M01，其他图还没定。",
       "should_select": true,
       "expected_stage": "S3",
       "must": [
-        "不对包含未批准图的整个版本写 approved",
-        "先准备符合服务约束的独立执行方案或经确认选逐图路径"
+        "提交前保存M01确认与执行快照",
+        "仅提交M01核心任务并记录原任务身份"
       ],
       "must_not": [
-        "用 M01 认可作为整版确认",
-        "把 submit panel_ids 当批准范围过滤器"
+        "将其他图混入批次",
+        "调用整版确认工具或把M01认可扩成整版确认"
       ]
     },
     {
       "id": "E34",
-      "context": "普通 Nano plan 的 M01、M02 都有用户定稿 edits；每次 plan 会重建全部默认 panels。当前只做免费改稿。",
+      "context": "Skill档案的M01、M02文案排版均已定稿；本次只做免费文字改稿，不使用Nano策划器。",
       "prompt": "改 M01 标题，M02 保持原定稿。",
       "should_select": true,
       "expected_stage": "S2",
       "must": [
-        "保留完整 brief 与 M01/M02 已定稿 edits",
-        "比较新版本全部 panels，M02 不意外回退"
+        "只改M01标题，保留M02全部定稿事实/文案/排版和图片映射",
+        "保存新版差异，标明待确认且不生成"
       ],
       "must_not": [
-        "仅传 M01 edits 导致 M02 恢复默认",
-        "把修改草稿当作生成授权"
+        "重建服务器默认panels导致M02回退",
+        "把修改草稿当生成授权"
       ]
     },
     {
       "id": "E35",
-      "context": "完整 suite 中 M01 已接受，其余待改；用户提出修改共享 palette，所有 frames 继承同一 style。",
+      "context": "同组M01已接受，其余待改；用户要求修改整套共享色调但保留原图文件。所有新稿继承新共享规范。",
       "prompt": "把整套色调改暖，但先保留原图文件。",
       "should_select": true,
       "expected_stage": "S2",
       "must": [
-        "列出全部共享 style 关联图的影响",
-        "保留旧文件，重新核对新组确认范围"
+        "列出新共享色调影响的图号",
+        "保留原图与旧组，重新核对新组的确认范围"
       ],
       "must_not": [
-        "只标记一张图受影响",
-        "把保留旧图说成已属于新组且一致"
+        "只标记一图受影响",
+        "把旧图声称属于新组且一致"
       ]
     },
     {
       "id": "E36",
-      "context": "Nano reference_replica 的真实文件已由 Host 看图，任务版本与当前文件 SHA 可核对；用户尚未验收。",
+      "context": "Nano核心任务生成文件已由Host看图，原任务三元组和文件SHA可核对；无服务端复刻评审扩展，用户未验收。",
       "prompt": "检查这些复刻图并交给我看。",
       "should_select": true,
       "expected_stage": "S5",
       "must": [
-        "按真实观察调用 review_reference_replica 保存六维证据及任务版本 SHA",
-        "展示图片交用户判断"
+        "Skill保存六项真实检查证据、原任务身份和文件SHA",
+        "展示图片由用户判断"
       ],
       "must_not": [
-        "把 agent_passed 当用户接受",
-        "没有证据却把看不清的文字评为 pass"
+        "因缺review工具就拒绝验收",
+        "把自评当用户接受或将看不清文字标通过"
       ]
     },
     {
@@ -629,5 +629,6 @@
         "因旧请求未知而拒绝所有独立策划工作"
       ]
     }
-  ]
+  ],
+  "previous_rubric": "1.0: frozen historical results remain valid only for that older contract"
 }

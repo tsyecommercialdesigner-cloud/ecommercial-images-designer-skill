@@ -4,7 +4,7 @@
 
 **角色先分清：普通成员从第4节下载同版正式附件并校验安装，不需要克隆仓库、安装开发工具或自行打包。开发者／维护者才执行第3、10节的源码与发行操作；MCP管理员负责第5节的服务连接。** 本手册针对v0.1.4完整目录包（复数 `references/`）。只有正式Release附件才作为成员安装来源；发行前的本地／草稿文件不表示已发布。旧v0.1.0–v0.1.3及附件保留，不原地覆盖。
 
-本手册随v0.1.4候选冻结；正式发布状态以[Release页面](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.4)为准。普通成员只在正式发布后下载本版四附件，从第4节开始；发布后的准确提交、CI及附件摘要另记入交付说明，冻结附件不覆盖更新。
+正式发行已核对：[v0.1.4 Release](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.4)（ID423755671），发行源码／标签固定为 `cf66420efb683bbfa3206a44669acd31c899f849`。普通成员使用[冻结随包手册](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/download/v0.1.4/MANUAL.md)从第4节开始；[发布回执](docs/RELEASE-v0.1.4.md)记录准确CI与七附件。本仓库在发布后补充此来源说明，六个PowerShell代码块、ZIP摘要和已冻结附件保持同版，不覆盖更新。
 
 团队当前可以分发**固定提交的完整 Skill 目录**，让成员安装到业务项目的 `.agents/skills/ecommerce-image-designer/`。只策划时不必部署图像服务；实际出图前，由管理员准备指定 MCP，使用者确认具体方案和本次收费范围。
 

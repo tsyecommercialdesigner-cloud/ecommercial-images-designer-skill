@@ -21,6 +21,8 @@
 
 发行源码同步时main、dev、origin/main、origin/dev均为cf66420。工作流没有tag／release触发器，不将上述源码CI称为标签CI。发布后说明需另走PR／准确head评审、CI、合入及dev快进同步CI；最终ref和所有运行结果记录在本地final-status证据，不改发行源码。
 
+发布后说明已由[PR #17](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/pull/17)普通merge为`4d36224c1608582605d6573402ff0a8f8304c99c`；准确head`6414c44c53a40b3dead967f88206539ea0989481`的[Agent自审](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/pull/17#pullrequestreview-5646225762)、[PR CI 40250781575](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/40250781575)、[dev CI 40250762148](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/40250762148)与[合入CI 40250906718](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/actions/runs/40250906718)均通过。Beads另有一条关闭状态互动审计自动追加，收尾时补入独立审核提交；此追加及最终同步CI仍按准确head核验并留本地final-status，不改写旧提交或发行资产。
+
 ## 七个正式附件
 
 | 附件 | SHA256 |

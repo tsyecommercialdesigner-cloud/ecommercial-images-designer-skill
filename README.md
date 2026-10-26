@@ -4,13 +4,13 @@
 
 技能入口：[ecommerce-image-designer](.agents/skills/ecommerce-image-designer/SKILL.md)。课程来源与适用边界见 [方法摘要](.agents/skills/ecommerce-image-designer/references/source-methods.md)。宠物烘干箱只作为来源案例，不提供其他商品的参数默认值。
 
-v0.1.4目录迁移候选（正式状态以Release页面为准），完整技能包使用复数 `references/`；旧v0.1.3使用 `reference/`。成员下载同版四附件，按手册备份后升级完整包，不只替换手册；旧标签、附件与失败记录保留。
+v0.1.4已正式发布，完整技能包使用复数 `references/`；旧v0.1.3使用 `reference/`。成员下载同版四附件，按手册备份后升级完整包，不只替换手册；旧标签、附件与失败记录保留。
 
 历史v0.1.3免费宿主验证及失败修复见[历史记录](docs/HOST-RELEASE-aju.md)；本次v0.1.4仅作目录迁移和确定性回归，没有新增模型／真实Host测试。团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
 
 普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装；第3节打包仅供维护者。本仓库手册已修复交互执行时的失败后假成功，并支持带双引号的目录输入；v0.1.4 随包手册包含这些修复，v0.1.0 保留为历史版本。
 
-修正版发行：[v0.1.4](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.4)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。本次目录迁移与验证范围见 [迁移记录](docs/DIRECTORY-MIGRATION-tsz.md)；历史[v0.1.3发布回执](docs/RELEASE-v0.1.3.md)保留。技能运行包采用新的固定内容树和 ZIP 摘要；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
+修正版发行：[v0.1.4](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.4)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。本次准确源码、CI与七附件见 [v0.1.4发布回执](docs/RELEASE-v0.1.4.md)，目录迁移与验证范围见 [迁移记录](docs/DIRECTORY-MIGRATION-tsz.md)；历史[v0.1.3发布回执](docs/RELEASE-v0.1.3.md)保留。技能运行包采用新的固定内容树和 ZIP 摘要；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
 
 v0.1.2 由 Skill 自行策划、文案排版与提示词，确认后直连两个 MCP 的核心生成／批量工具；不依赖服务端策划、复刻编译、resources 或 prompt 模板，见[适配与免费回归记录](docs/CORE-IMAGE-ADAPTER-64a.md)。旧 v0.1.0–v0.1.3 保留，成员升级需取得 v0.1.4 的完整技能包，不能只替换手册。
 

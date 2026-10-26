@@ -2,17 +2,17 @@
 
 将商品资料和参考图转成可分步研讨的主图、详情页和 SKU 方案，覆盖卖点、文案、排版、提示词、确认后交由图像 MCP 生成，以及成品验收和反馈回退。
 
-技能入口：[ecommerce-image-designer](.agents/skills/ecommerce-image-designer/SKILL.md)。课程来源与适用边界见 [方法摘要](.agents/skills/ecommerce-image-designer/reference/source-methods.md)。宠物烘干箱只作为来源案例，不提供其他商品的参数默认值。
+技能入口：[ecommerce-image-designer](.agents/skills/ecommerce-image-designer/SKILL.md)。课程来源与适用边界见 [方法摘要](.agents/skills/ecommerce-image-designer/references/source-methods.md)。宠物烘干箱只作为来源案例，不提供其他商品的参数默认值。
 
-v0.1.3已正式发布，完整技能包使用单数 `reference/`；旧v0.1.2仍使用 `references/`。成员下载同版四附件，按手册备份后升级完整包，不只替换手册；旧标签、附件与失败记录保留。
+v0.1.4目录迁移候选（正式状态以Release页面为准），完整技能包使用复数 `references/`；旧v0.1.3使用 `reference/`。成员下载同版四附件，按手册备份后升级完整包，不只替换手册；旧标签、附件与失败记录保留。
 
-本版免费宿主验证及失败修复见[本轮记录](docs/HOST-RELEASE-aju.md)。团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
+历史v0.1.3免费宿主验证及失败修复见[历史记录](docs/HOST-RELEASE-aju.md)；本次v0.1.4仅作目录迁移和确定性回归，没有新增模型／真实Host测试。团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
 
-普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装；第3节打包仅供维护者。本仓库手册已修复交互执行时的失败后假成功，并支持带双引号的目录输入；v0.1.3 随包手册包含这些修复，v0.1.0 保留为历史版本。
+普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装；第3节打包仅供维护者。本仓库手册已修复交互执行时的失败后假成功，并支持带双引号的目录输入；v0.1.4 随包手册包含这些修复，v0.1.0 保留为历史版本。
 
-修正版发行：[v0.1.3](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.3)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。发布源码、七附件摘要及CI记录见 [v0.1.3 发布回执](docs/RELEASE-v0.1.3.md)。技能运行包采用新的固定内容树和 ZIP 摘要；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
+修正版发行：[v0.1.4](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.4)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。本次目录迁移与验证范围见 [迁移记录](docs/DIRECTORY-MIGRATION-tsz.md)；历史[v0.1.3发布回执](docs/RELEASE-v0.1.3.md)保留。技能运行包采用新的固定内容树和 ZIP 摘要；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
 
-v0.1.2 由 Skill 自行策划、文案排版与提示词，确认后直连两个 MCP 的核心生成／批量工具；不依赖服务端策划、复刻编译、resources 或 prompt 模板，见[适配与免费回归记录](docs/CORE-IMAGE-ADAPTER-64a.md)。旧 v0.1.0／v0.1.1 保留，成员升级需取得 v0.1.3 的完整技能包，不能只替换手册。
+v0.1.2 由 Skill 自行策划、文案排版与提示词，确认后直连两个 MCP 的核心生成／批量工具；不依赖服务端策划、复刻编译、resources 或 prompt 模板，见[适配与免费回归记录](docs/CORE-IMAGE-ADAPTER-64a.md)。旧 v0.1.0–v0.1.3 保留，成员升级需取得 v0.1.4 的完整技能包，不能只替换手册。
 
 ## 使用
 
@@ -32,14 +32,14 @@ $ecommerce-image-designer
 
 | 路径 | 用途 |
 |---|---|
-| `.agents/skills/ecommerce-image-designer/` | 开发技能：入口、`reference/`、可选状态脚本、许可证和 Codex UI 元数据。 |
+| `.agents/skills/ecommerce-image-designer/` | 开发技能：入口、`references/`、可选状态脚本、许可证和 Codex UI 元数据。 |
 | `evals/scenarios.json`、`evals/RUBRIC.md` | 固定的选择／行为场景和评判方法；不含真实客户资料。 |
 | `evals/mock_mcp.py`、`evals/README.md`、`scripts/*behavior_eval.py` | 无收费绘图权限的 MCP 替身、隔离模型实跑、独立评分及复现方法。 |
 | `scripts/validate_skill.py`、`tests/` | 本地结构和资源检查、失败路径测试。 |
 | `docs/USAGE.md`、`docs/VALIDATION.md` | 发现／使用说明、验证命令和覆盖边界。 |
 | `CONVENTIONS.md`、`AGENTS.md`、`docs/ENGINEERING-GUIDE.md` | 项目工程约定。 |
 
-安装、配置和升级见 [手册](MANUAL.md)，简要调用见 [使用说明](docs/USAGE.md)。开发检查见 [验证说明](docs/VALIDATION.md)，仓库根执行 `./scripts/check.ps1`，先按验证说明准备锁定依赖。已提供 [Windows CI配置及交付约定](docs/DELIVERY.md)，准确提交的远端执行与门禁证据见各版发布回执；已发布 v0.1.0–v0.1.3，不能据此推断当前开发工作树已发布或跨宿主兼容。版本修复和入口摘要变化见 [CHANGELOG.md](CHANGELOG.md)。
+安装、配置和升级见 [手册](MANUAL.md)，简要调用见 [使用说明](docs/USAGE.md)。开发检查见 [验证说明](docs/VALIDATION.md)，仓库根执行 `./scripts/check.ps1`，先按验证说明准备锁定依赖。已提供 [Windows CI配置及交付约定](docs/DELIVERY.md)，准确提交的远端执行与门禁证据见各版发布回执；旧版v0.1.0–v0.1.3保留，v0.1.4正式状态以Release页面为准，不能据此推断当前开发工作树已发布或跨宿主兼容。版本修复和入口摘要变化见 [CHANGELOG.md](CHANGELOG.md)。
 
 完整需求覆盖与本轮修复见 [Skill 审查记录](docs/SKILL-REVIEW.md)，包括两个 MCP 的实际入口限制、方案批准粒度和反馈回退证据。
 

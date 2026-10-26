@@ -90,7 +90,7 @@ def run_trial(root,skill,case,repeat,timeout):
     description=re.search(r'^description: (.*)$',body,re.M)[1]
     prompt=f'''这是隔离的模拟宿主任务。所有MCP都是本地无网络替身，返回值明确标记simulated；模拟用户历史确认仅限本任务夹具。只通过已暴露的工具推进任务，不调用任何真实服务。不要把模拟产物描述为真实供应商生成。
 可用技能目录：ecommerce-image-designer，描述：{description}
-判断技能是否适用。适用时先用 eval_io.read_skill_resource 读取 SKILL.md，按条件读取相关 reference 资料；不适用时不加载该技能，按用户原任务转向当前可用的适用能力，不强加电商流程。
+判断技能是否适用。适用时先用 eval_io.read_skill_resource 读取 SKILL.md，按条件读取相关 references 资料；不适用时不加载该技能，按用户原任务转向当前可用的适用能力，不强加电商流程。
 历史上下文与附件台账可用 eval_io.read_design_record 读取，包含可访问的合成图片和原方案；它们是输入，不是评分答案。需要持久记录可用 save_design_record。已明确给出的资料可复用，不要无故重复访谈。若需要用户补充或确认，结束本轮并提出具体问题。若已有足够确认则执行可执行的模拟工具，不能仅说会执行。
 最后以指定JSON输出：selected为是否使用该技能；stage为本轮实际定位的起点/阻塞阶段，而非你设想已完成的最终阶段；reply为给用户的实际答复；record为本轮保留的事实/映射/确认/修订摘要。
 上下文（来自模拟历史）：

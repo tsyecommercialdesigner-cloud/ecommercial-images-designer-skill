@@ -128,12 +128,12 @@ def validate_skill(directory: Path) -> list[str]:
         if not resource.resolve().is_relative_to(directory):
             errors.append(f"resource escapes package: {resource.name}")
         relative = resource.relative_to(directory)
-        if resource.is_dir() and (len(relative.parts) != 1 or relative.name not in {"reference", "scripts", "assets", "agents"}):
+        if resource.is_dir() and (len(relative.parts) != 1 or relative.name not in {"references", "scripts", "templates", "assets", "agents"}):
             errors.append(f"unsupported or nested resource directory: {relative.as_posix()}")
         if resource.is_file():
             if len(relative.parts) == 1 and resource.name not in {"SKILL.md", "LICENSE"}:
                 errors.append(f"unexpected root resource: {relative.as_posix()}")
-            if relative.parts[0] in {"scripts", "assets"} and resource.resolve() not in reached:
+            if relative.parts[0] in {"scripts", "templates", "assets"} and resource.resolve() not in reached:
                 errors.append(f"resource not directly indexed: {relative.as_posix()}")
     names = [p.relative_to(directory).as_posix().casefold() for p in directory.rglob("*")]
     if len(names) != len(set(names)):

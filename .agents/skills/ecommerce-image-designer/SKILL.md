@@ -14,16 +14,16 @@ license: MIT
 
 以下路径均相对宿主返回的技能根目录；只读取当前分支必需的资源，不预载全目录。各主题从本入口直接取得，不沿辅助文档串联加载其他规则。
 
-**先选择交付分支，再读对应资源。** 免费能力状态、完整单图草案、局部文字恢复在构造答卷前，必须实际读取 [reference/state-contract.md](reference/state-contract.md) 的固定字段；不能凭下面的三键概括自拟 JSON。局部恢复还必须先读取用户指定的实际档案（例如调用方目录的 `design-record.json`）；`reference/design-record.md` 是方法说明，不是用户档案，两者不能互相代替。用户档案读取失败时报告具体缺口，不将整份 state 清空后假装恢复完成。纯文字恢复只用实际档案、恢复规则及状态契约，不因“反馈／拥挤”字样加载 S5 诊断或通用策划模板。
+**先选择交付分支，再读对应资源。** 免费能力状态、完整单图草案、局部文字恢复在构造答卷前，必须实际读取 [references/state-contract.md](references/state-contract.md) 的固定字段；不能凭下面的三键概括自拟 JSON。局部恢复还必须先读取用户指定的实际档案（例如调用方目录的 `design-record.json`）；`references/design-record.md` 是方法说明，不是用户档案，两者不能互相代替。用户档案读取失败时报告具体缺口，不将整份 state 清空后假装恢复完成。纯文字恢复只用实际档案、恢复规则及状态契约，不因“反馈／拥挤”字样加载 S5 诊断或通用策划模板。
 
 | 条件 | 动作与直接入口 | 产物与核验 |
 |---|---|---|
-| 开始或恢复设计 | 读 [reference/design-record.md](reference/design-record.md) | 同一档案保留事实、图像身份、版本和确认依据；缺值标未知。 |
-| 未确认的能力状态、单图策划、局部文字恢复 | 读 [reference/state-contract.md](reference/state-contract.md) | 分别交付 status/plan/revision 的一份 JSON；不把草案当 MCP 参数或授权。 |
-| S1–S3 策划与提示词 | 读 [reference/planning-and-prompts.md](reference/planning-and-prompts.md) | 文案、布局和完整提示词对应事实与图号。 |
-| 策划新方向需借鉴来源方法 | 读 [reference/source-methods.md](reference/source-methods.md) | 方法来源与建议分开；案例参数不迁入当前商品。 |
-| 选择、提交或恢复出图任务 | 读 [reference/mcp-adapters.md](reference/mcp-adapters.md) | 核对当前 schema、输入映射、任务身份和获取状态。 |
-| S5 实图验收或明确要求查看旧图诊断；纯文字恢复不读 | 读 [reference/review-and-revision.md](reference/review-and-revision.md) | 实图证据及回退阶段，保留未受影响的已接受图。 |
+| 开始或恢复设计 | 读 [references/design-record.md](references/design-record.md) | 同一档案保留事实、图像身份、版本和确认依据；缺值标未知。 |
+| 未确认的能力状态、单图策划、局部文字恢复 | 读 [references/state-contract.md](references/state-contract.md) | 分别交付 status/plan/revision 的一份 JSON；不把草案当 MCP 参数或授权。 |
+| S1–S3 策划与提示词 | 读 [references/planning-and-prompts.md](references/planning-and-prompts.md) | 文案、布局和完整提示词对应事实与图号。 |
+| 策划新方向需借鉴来源方法 | 读 [references/source-methods.md](references/source-methods.md) | 方法来源与建议分开；案例参数不迁入当前商品。 |
+| 选择、提交或恢复出图任务 | 读 [references/mcp-adapters.md](references/mcp-adapters.md) | 核对当前 schema、输入映射、任务身份和获取状态。 |
+| S5 实图验收或明确要求查看旧图诊断；纯文字恢复不读 | 读 [references/review-and-revision.md](references/review-and-revision.md) | 实图证据及回退阶段，保留未受影响的已接受图。 |
 | 外部编排方已具备可信证据且允许本地执行 | 执行 [scripts/validate_design_state.py](scripts/validate_design_state.py) | 按状态契约的 CLI 校验或渲染；检查退出码和结果，失败不提交。 |
 | 原稿已评分，需重建待审候选 | 执行 [scripts/compile_design_state.py](scripts/compile_design_state.py) | 按状态契约的 CLI 写入全新候选目录；原稿与成绩保留，候选仍待确认。 |
 

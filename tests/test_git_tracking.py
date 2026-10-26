@@ -29,7 +29,7 @@ class GitTrackingTests(unittest.TestCase):
             tracked = ['.env.example', 'tests/test_package.py', 'tests/fixtures/safe.json',
                        'tests/golden/answer.md', 'evals/scenarios.json', 'uv.lock',
                        'sub/package-lock.json', '.github/workflows/windows-ci.yml',
-                       '.agents/skills/example/SKILL.md', '.agents/skills/example/reference/rules.md',
+                       '.agents/skills/example/SKILL.md', '.agents/skills/example/references/rules.md',
                        '.agents/skills/example/agents/openai.yaml', '.claude/skills/example/SKILL.md',
                        'outputs/approved-design.md', 'sub/scripts/check.py']
             for path in ignored + tracked:

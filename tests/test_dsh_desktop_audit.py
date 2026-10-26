@@ -113,6 +113,25 @@ class DesktopAuditTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'outside'):
                 audit.check_trace(self.recovery_trace(['design-record.json', resource, path]), 'recovery', self.route, contract=True)
 
+    def test_plural_migration_keeps_strict_recovery_without_rescoring_old_snapshots(self):
+        parent = Path(__file__).resolve().parents[1] / '.eval-workspaces'
+        parent.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=parent) as temp:
+            root = Path(temp)
+            package = root / '.agents/skills/ecommerce-image-designer'
+            (package / 'references').mkdir(parents=True)
+            (package / 'SKILL.md').write_text('局部恢复还必须先读取用户指定的实际档案', encoding='utf-8')
+            prefix = '.agents/skills/ecommerce-image-designer/references/'
+            good = ['design-record.json', prefix + 'state-contract.md', prefix + 'design-record.md']
+            self.assertEqual(audit.check_trace(self.recovery_trace(good), 'recovery', self.route, root, contract=True)['tool_calls'], 4)
+            for name in ('planning-and-prompts.md', 'review-and-revision.md'):
+                with self.assertRaisesRegex(ValueError, 'outside'):
+                    audit.check_trace(self.recovery_trace(good + [prefix + name]), 'recovery', self.route, root, contract=True)
+            # The older plural snapshot did allow these reads. Keep that
+            # historical policy without inferring it from the new directory.
+            (package / 'SKILL.md').write_text('old frozen method', encoding='utf-8')
+            self.assertEqual(audit.check_trace(self.recovery_trace(good + [prefix + name]), 'recovery', self.route, root, contract=True)['tool_calls'], 5)
+
     def test_failure_metrics_keep_images_returned_before_later_error(self):
         trace = copy.deepcopy(self.trace)
         trace['events'].extend([

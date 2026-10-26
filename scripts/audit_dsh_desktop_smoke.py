@@ -77,9 +77,17 @@ def check_trace(snapshot, case, route, work=None, *, contract=False):
             if (package / 'references').is_dir():
                 if (package / 'reference').exists():
                     raise ValueError('Ambiguous frozen resource layout')
-                resource_dir = 'references'  # Read-only auditing of old snapshots.
+                resource_dir = 'references'
         prefix = '.agents/skills/ecommerce-image-designer/' + resource_dir + '/'
-        recovery_resources = ('design-record.md',) if contract and resource_dir == 'reference' else (
+        # Directory spelling is not a behavior version: v0.1.4 uses the same
+        # strict recovery method as v0.1.3, now under references/. Old frozen
+        # plural snapshots retain their original audit policy.
+        strict_recovery = resource_dir == 'reference'
+        if work:
+            entry = package / 'SKILL.md'
+            if entry.is_file():
+                strict_recovery = strict_recovery or '局部恢复还必须先读取用户指定的实际档案' in entry.read_text(encoding='utf-8')
+        recovery_resources = ('design-record.md',) if contract and strict_recovery else (
             'design-record.md', 'planning-and-prompts.md', 'review-and-revision.md')
         allowed = {'design-record.json'} | {
             prefix + name

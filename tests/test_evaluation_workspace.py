@@ -124,7 +124,7 @@ class EvaluationWorkspaceTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         before = json.loads((root / 'before.json').read_text())
         self.assertEqual(len(before['skill_manifest']), 11)
-        self.assertTrue(any('/reference/' in path for path in before['skill_manifest']))
+        self.assertTrue(any('/references/' in path for path in before['skill_manifest']))
         self.assertTrue((root / workspace.MARKER).is_file())
         for path, digest in before['configuration_sha256'].items():
             self.assertEqual(workspace.file_digest(Path(path)), digest)

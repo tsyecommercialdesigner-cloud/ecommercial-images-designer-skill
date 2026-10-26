@@ -10,7 +10,7 @@
 
 技能名称为 `ecommerce-image-designer`，目录为 `.agents/skills/ecommerce-image-designer/`，该目录包含独立运行所需的全部指令参考资料和 MIT 许可证。它不包含图像服务的安装程序或凭据。
 
-当前团队分发采用 [v0.1.3正式版](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.3)，准确来源、七附件及CI见[发布回执](RELEASE-v0.1.3.md)。本版运行包为单数reference/；旧v0.1.0–v0.1.2保留，升级需备份后安装完整同版包，不能混用摘要或只替换手册。
+本次目录升级候选为 [v0.1.4（正式状态以Release页面为准）](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.4)，准确来源、七附件及CI见[迁移记录](DIRECTORY-MIGRATION-tsz.md)，发行后回执另行补充。本版运行包为复数references/；旧v0.1.3单数reference/及更早版本保留，升级需备份后安装完整同版包，不能混用摘要或只替换手册。
 
 ## Codex 中发现
 
@@ -42,7 +42,7 @@
 
 ## MCP 与费用
 
-规划阶段可离线进行；图像生成与编辑仅使用 `zhenzhen-gptimagegen2.5-mcp` 和 `zhenzhen-nanobanana-mcp`。按任务选择其中一个，出图前检查其真实工具及配置状态，不要求每次同时调用两个服务。适配与选择规则见 [MCP 说明](../.agents/skills/ecommerce-image-designer/reference/mcp-adapters.md)。不要求用户把密钥发送到聊天或写进技能。两个指定服务均不可用或均不支持任务时，准确报告并保留可审阅方案，不使用其他 MCP、内置出图工具或直连 API 替代。
+规划阶段可离线进行；图像生成与编辑仅使用 `zhenzhen-gptimagegen2.5-mcp` 和 `zhenzhen-nanobanana-mcp`。按任务选择其中一个，出图前检查其真实工具及配置状态，不要求每次同时调用两个服务。适配与选择规则见 [MCP 说明](../.agents/skills/ecommerce-image-designer/references/mcp-adapters.md)。不要求用户把密钥发送到聊天或写进技能。两个指定服务均不可用或均不支持任务时，准确报告并保留可审阅方案，不使用其他 MCP、内置出图工具或直连 API 替代。
 
 调用服务会按其规则产生费用。用户须先确认将执行的方案，收费操作还须处于已授权范围；一次指令可同时确认方案并授权生成，不重复索取有效授权。结果不明先查询原任务，下载失败先恢复文件，不自动换 ID、换服务或重画。
 

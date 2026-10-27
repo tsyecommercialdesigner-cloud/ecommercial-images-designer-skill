@@ -15,7 +15,9 @@ function Get-ProbeBlock([string]$Marker) {
 }
 $ProbeVerifyBlock = Get-ProbeBlock 'VERIFY'
 $ProbeInstallBlock = Get-ProbeBlock 'INSTALL'
-foreach ($ProbeAtomicBlock in @($ProbeVerifyBlock,$ProbeInstallBlock)) {
+$ProbeCheckBlock = Get-ProbeBlock 'CHECK'
+$ProbeBackupBlock = Get-ProbeBlock 'BACKUP'
+foreach ($ProbeAtomicBlock in @($ProbeVerifyBlock,$ProbeInstallBlock,$ProbeCheckBlock,$ProbeBackupBlock)) {
     $ProbeStatements = @($ProbeAtomicBlock.Ast.EndBlock.Statements)
     if ($ProbeStatements.Count -ne 1 -or $ProbeStatements[0] -isnot [Management.Automation.Language.PipelineAst]) { throw 'Member block must be one submitted statement, including its success output' }
     $ProbeCommands = @($ProbeStatements[0].PipelineElements)
@@ -56,6 +58,16 @@ foreach ($ProbeInstallAttempt in $ProbeRequest.installations) {
     catch { $ProbeError = $_.Exception.Message }
     $ProbeInstallResults += [pscustomobject]@{error=$ProbeError;output=@($ProbeOutput);unread_answers=$ProbeAnswers.Count}
 }
+$ProbeCheckResults = @()
+foreach ($ProbeCheckAttempt in $ProbeRequest.checks) {
+    $ProbeAnswers.Clear()
+    foreach ($ProbeAnswer in $ProbeCheckAttempt.answers) { $ProbeAnswers.Enqueue([string]$ProbeAnswer) }
+    $ProbeOutput = [Collections.Generic.List[string]]::new()
+    $ProbeError = $null
+    try { . $ProbeCheckBlock | ForEach-Object { $ProbeOutput.Add([string]$_) } }
+    catch { $ProbeError = $_.Exception.Message }
+    $ProbeCheckResults += [pscustomobject]@{error=$ProbeError;output=@($ProbeOutput);unread_answers=$ProbeAnswers.Count}
+}
 $ProbeTaskDir = $null
 if ($ProbeRequest.task_directory) {
     $ProbeAnswers.Clear(); $ProbeAnswers.Enqueue($ProbeRequest.task_directory)
@@ -82,4 +94,4 @@ if ($ProbeRequest.backup_restore) {
     if (Test-Path -LiteralPath $ProbeOriginalInstall) { throw 'Move-out uninstall left installed files' }
     $ProbeBackupFlow = 'same-snapshot backup, reinstall, restore and move-out uninstall passed'
 }
-[ordered]@{verifications=$ProbeResults;installations=$ProbeInstallResults;prompts=@($ProbePrompts);powershell_blocks=$ProbeBlocks.Count;task_directory=$ProbeTaskDir;backup_restore=$ProbeBackupFlow} | ConvertTo-Json -Depth 8
+[ordered]@{verifications=$ProbeResults;installations=$ProbeInstallResults;checks=$ProbeCheckResults;prompts=@($ProbePrompts);powershell_blocks=$ProbeBlocks.Count;task_directory=$ProbeTaskDir;backup_restore=$ProbeBackupFlow} | ConvertTo-Json -Depth 8

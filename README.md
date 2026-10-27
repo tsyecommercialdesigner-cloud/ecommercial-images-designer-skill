@@ -8,7 +8,7 @@ v0.1.4已正式发布，完整技能包使用复数 `references/`；旧v0.1.3使
 
 历史v0.1.3免费宿主验证及失败修复见[历史记录](docs/HOST-RELEASE-aju.md)；本次v0.1.4仅作目录迁移和确定性回归，没有新增模型／真实Host测试。团队分发、固定版本打包、成员安装与验收、MCP准备、使用示例和升级／回滚／卸载见 [MANUAL.md](MANUAL.md)。
 
-普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装；第3节打包仅供维护者。本仓库手册已修复交互执行时的失败后假成功，并支持带双引号的目录输入；v0.1.4 随包手册包含这些修复，v0.1.0 保留为历史版本。
+普通成员从[手册第4节](MANUAL.md#4-成员校验并安装)下载正式附件并验证安装，按“校验→安装→确认宿主来源→使用”操作；[维护者打包](docs/MAINTAINER-DISTRIBUTION.md)独立说明。仓库手册于2026-10-27重写，支持带双引号路径、安装内容复查及失败停止；v0.1.4已冻结的随包手册不被本次文案改写替换，旧Release保留。
 
 修正版发行：[v0.1.4](https://github.com/tsyecommercialdesigner-cloud/ecommercial-images-designer-skill/releases/tag/v0.1.4)。使用同版 Release 附件中的完整技能包、手册及摘要清单；准确源码提交见 `release.json`，限制见 `RELEASE-NOTES.md`。本次准确源码、CI与七附件见 [v0.1.4发布回执](docs/RELEASE-v0.1.4.md)，目录迁移与验证范围见 [迁移记录](docs/DIRECTORY-MIGRATION-tsz.md)；历史[v0.1.3发布回执](docs/RELEASE-v0.1.3.md)保留。技能运行包采用新的固定内容树和 ZIP 摘要；[v0.1.0 发布回执](docs/RELEASE-v0.1.0.md)及其附件保留。
 

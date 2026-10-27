@@ -173,6 +173,42 @@ class ManualWorkflowTests(unittest.TestCase):
         self.assertIn('存在同名技能', result['installations'][1]['error'])
         self.assertEqual(result['installations'][1]['output'], [])
 
+    def test_new_window_rechecks_installed_files_with_quoted_project(self):
+        self.probe()
+        result = self.probe(installations=[], checks=[dict(answers=['  "' + str(self.project) + '"  '])])
+        self.assertIsNone(result['checks'][0]['error'])
+        self.assertTrue(any('文件检查通过' in line for line in result['checks'][0]['output']))
+
+    def test_check_requires_fresh_verification_before_asking_for_project(self):
+        result = self.probe(verifications=[], installations=[], checks=[dict(answers=[str(self.project)])])
+        self.assertIn('尚未完成本轮验证', result['checks'][0]['error'])
+        self.assertEqual(result['checks'][0]['output'], [])
+        self.assertEqual(result['checks'][0]['unread_answers'], 1)
+
+    def test_check_rejects_changed_missing_or_extra_file_without_success(self):
+        self.probe()
+        target = self.project / '.agents/skills/ecommerce-image-designer/SKILL.md'
+        original = target.read_bytes()
+        extra = target.parent / 'unexpected.txt'
+        for kind in ('changed', 'missing', 'extra'):
+            with self.subTest(kind=kind):
+                try:
+                    if kind == 'changed':
+                        target.write_bytes(original + b'\nlocal edit')
+                    elif kind == 'missing':
+                        target.unlink()
+                    else:
+                        extra.write_text('preserve this synthetic local file', encoding='utf-8')
+                    result = self.probe(installations=[], checks=[dict(answers=[str(self.project)])])
+                    self.assertIsNotNone(result['checks'][0]['error'])
+                    self.assertEqual(result['checks'][0]['output'], [])
+                    if kind == 'extra':
+                        self.assertEqual(extra.read_text(encoding='utf-8'), 'preserve this synthetic local file')
+                finally:
+                    target.write_bytes(original)
+                    if extra.exists():
+                        extra.unlink()
+
     def test_same_snapshot_backup_reinstall_restore_and_uninstall_preserve_user_data(self):
         result = self.probe(backup_restore=True)
         self.assertIn('passed', result['backup_restore'])
